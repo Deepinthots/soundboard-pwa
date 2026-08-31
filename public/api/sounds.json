@@ -316,7 +316,7 @@
       "mp3": "/sounds/First-Class-Bitch.mp3"
     },
     {
-      "name": "Florida's Pots Not Good, Its Great",
+      "name": "Florida's Pot",
       "artist": "Tom Hopkins",
       "mp3": "/sounds/Floridas-Pot.mp3"
     },
@@ -1294,6 +1294,11 @@
       "name": "RRRRR",
       "artist": "Neil Rogers",
       "mp3": "/sounds/RRRRR.mp3"
+    },
+    {
+      "name": "Randy? What!",
+      "artist": "Randi Rhodes",
+      "mp3": "/sounds/Randi-What.mp3"
     },
     {
       "name": "Rap On It All Year Long",
