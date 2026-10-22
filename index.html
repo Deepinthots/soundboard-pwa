@@ -17,7 +17,7 @@
 			property="og:description"
 			content="A Progressive Web App soundboard that works offline and can be installed as a standalone app."
 		/>
-		<meta property="og:image" content="https://app.neilrogers.org/icons/icon-512x512.png" />
+		<meta property="og:image" content="./icons/icon-512x512.png" />
 		<meta property="og:image:width" content="512" />
 		<meta property="og:image:height" content="512" />
 		<meta property="og:image:alt" content="Soundboard PWA Icon" />
@@ -32,7 +32,7 @@
 			property="twitter:description"
 			content="A Progressive Web App soundboard that works offline and can be installed as a standalone app."
 		/>
-		<meta property="twitter:image" content="https://app.neilrogers.org/icons/icon-512x512.png" />
+		<meta property="twitter:image" content="./icons/icon-512x512.png" />
 		<meta
 			property="twitter:image:alt"
 			content="Soundboard PWA - Offline capable audio soundboard"
@@ -48,7 +48,7 @@
 		<meta name="language" content="English" />
 
 		<!-- PWA Manifest -->
-		<link rel="manifest" href="/manifest.json" />
+		<link rel="manifest" href="./manifest.json" />
 
 		<!-- Theme color -->
 		<meta name="theme-color" content="#1a1a1a" />
@@ -58,8 +58,8 @@
 		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 		<meta name="apple-mobile-web-app-title" content="Soundboard PWA" />
 		<!-- Icons -->
-		<link rel="icon" href="/favicon.svg" type="image/svg+xml" />
-		<link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+		<link rel="icon" href="./favicon.svg" type="image/svg+xml" />
+		<link rel="apple-touch-icon" href="./apple-touch-icon.png" />
 
 		<!-- 8-bit pixel font -->
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -182,16 +182,6 @@
 					2px 2px 0px rgba(0, 0, 0, 0.8);
 			}
 
-			.header .cache-legend {
-				display: block;
-				margin-top: 6px;
-				font-size: 0.55rem;
-				color: var(--pastel-green);
-				text-shadow:
-					1px 1px 0px var(--dark-green),
-					2px 2px 0px rgba(0, 0, 0, 0.8);
-			}
-
 			.controls {
 				background: var(--bg-secondary);
 				border: 4px solid var(--pastel-green);
@@ -301,19 +291,6 @@
 				right: 8px;
 				color: var(--pastel-green);
 				font-size: 0.8rem;
-			}
-			.cache-icon {
-				position: absolute;
-				bottom: 8px;
-				right: 8px;
-				color: var(--pastel-green);
-				font-size: 0.7rem;
-				text-shadow:
-					1px 1px 0px var(--dark-green),
-					2px 2px 0px rgba(0, 0, 0, 0.8);
-				pointer-events: none;
-				line-height: 1;
-				z-index: 2;
 			}
 			.sound-name {
 				font-weight: normal;
@@ -493,64 +470,6 @@
 				text-shadow: 1px 1px 0px var(--dark-yellow);
 				margin-top: 12px;
 			}
-
-			@media (max-width: 768px) {
-				.sounds-container {
-					grid-template-columns: 1fr;
-				}
-
-				.header h1 {
-					font-size: 1.4rem;
-					letter-spacing: 0px;
-				}
-
-				.header .subtitle {
-					font-size: 0.7rem;
-				}
-
-				.sound-button {
-					font-size: 0.7rem;
-					padding: 16px;
-				}
-
-				.sound-name {
-					font-size: 0.7rem;
-				}
-
-				.sound-artist {
-					font-size: 0.6rem;
-				}
-
-				.search-input {
-					font-size: 0.8rem;
-				}
-
-				.tip {
-					font-size: 0.6rem;
-				}
-
-				.footer {
-					margin-top: 30px;
-					padding: 16px;
-				}
-
-				.footer-content {
-					font-size: 0.55rem;
-				}
-
-				.footer-links {
-					gap: 12px;
-				}
-
-				.footer-link {
-					font-size: 0.6rem;
-					padding: 6px 10px;
-				}
-
-				.footer-credit {
-					font-size: 0.5rem;
-				}
-			}
 		</style>
 	</head>
 	<body>
@@ -570,7 +489,7 @@
 						autocomplete="off"
 					/>
 				</div>
-				<div class="tip">↑ PRESS [S] TO SEARCH • CLICK TO PLAY ↑</div>
+				<div class="tip">↑ PRESS [S] SENSITIVE TO SEARCH • CLICK TO PLAY ↑</div>
 			</div>
 
 			<div id="sounds-container" class="sounds-container">
@@ -607,6 +526,6 @@
 		<div id="status" class="status"></div>
 		<div id="offline-indicator" class="offline-indicator">OFFLINE MODE - USING CACHED SOUNDS</div>
 
-		<script type="module" src="/main.js"></script>
+		<script type="module" src="./main.js"></script>
 	</body>
 </html>
