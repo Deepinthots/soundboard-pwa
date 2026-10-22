@@ -1,127 +1,56 @@
 // Main soundboard application
 
-// Fallback sounds data (first 20 sounds for offline-first experience)
+// Helper to determine the repository subfolder base path automatically
+const BASE_PATH = (() => {
+	const path = window.location.pathname;
+	return path.endsWith("/") ? path : path.substring(0, path.lastIndexOf("/") + 1);
+})();
+
+const resolvePath = (relativeUrl) => {
+	const cleanUrl = relativeUrl.startsWith("/") ? relativeUrl.slice(1) : relativeUrl;
+	return `${BASE_PATH}${cleanUrl}`;
+};
+
+// Fallback sounds data (pointing to your new office files)
 window.FALLBACK_SOUNDS = [
-	{
-		name: "1 to 12 hour",
-		artist: "Boca Britany Somers",
-		duration: "0:03",
-		mp3: "/sounds/1-to-12-hour.mp3",
-	},
-	{
-		name: "2 of the Dumbest",
-		artist: "Mike Reineri",
-		duration: "0:07",
-		mp3: "/sounds/2-of-the-Dumbest-White-Men.mp3",
-	},
-	{
-		name: "A Lot of Spooks",
-		artist: "Denis Potvin",
-		duration: "0:02",
-		mp3: "/sounds/A-Lot-of-Spooks-in-New-Jersey.mp3",
-	},
-	{
-		name: "A Stench of Cow Manure...",
-		artist: "Jim Mandich",
-		duration: "0:08",
-		mp3: "/sounds/A-Stench-of-Cow-Manure.mp3",
-	},
-	{
-		name: "A lot of masturbation",
-		artist: "Jim Mandich",
-		duration: "0:02",
-		mp3: "/sounds/A-lot-of-masturbation-went-on.mp3",
-	},
-	{
-		name: "About 30 Man",
-		artist: "Fake Ol' Dirty Bastard",
-		duration: "0:01",
-		mp3: "/sounds/About-30-man.mp3",
-	},
-	{
-		name: "Absolutely",
-		artist: "Moe Howard",
-		duration: "0:01",
-		mp3: "/sounds/Absolutely.mp3",
-	},
-	{
-		name: "Absolutely Correct Sir",
-		artist: "Bridgetender",
-		duration: "0:02",
-		mp3: "/sounds/Absolutely-Correct-Sir.mp3",
-	},
-	{
-		name: "All the Crap",
-		artist: "Neil Rogers",
-		duration: "0:02",
-		mp3: "/sounds/All-the-Crap.mp3",
-	},
-	{
-		name: "Another break already?",
-		artist: "Neil Rogers",
-		duration: "0:02",
-		mp3: "/sounds/Another-break-already_Q.mp3",
-	},
-	{
-		name: "Anybody have a heart or a liver",
-		artist: "Neil Rogers",
-		duration: "0:03",
-		mp3: "/sounds/Anybody-have-a-heart-or-a-liver.mp3",
-	},
-	{
-		name: "Are You Sure",
-		artist: "Neil Rogers",
-		duration: "0:01",
-		mp3: "/sounds/Are-You-Sure.mp3",
-	},
-	{
-		name: "Awright",
-		artist: "Neil Rogers",
-		duration: "0:01",
-		mp3: "/sounds/Awright.mp3",
-	},
-	{
-		name: "Ayayayayayayayay!",
-		artist: "Neil Rogers",
-		duration: "0:02",
-		mp3: "/sounds/Ayayayayayayayay!.mp3",
-	},
-	{
-		name: "Big O Jingle",
-		artist: "Neil Rogers",
-		duration: "0:05",
-		mp3: "/sounds/Big-O-Jingle.mp3",
-	},
-	{
-		name: "Bop Bop Bop",
-		artist: "Neil Rogers",
-		duration: "0:02",
-		mp3: "/sounds/Bop-Bop-Bop.mp3",
-	},
-	{
-		name: "Bring Neil Back",
-		artist: "Fan",
-		duration: "0:03",
-		mp3: "/sounds/Bring-Neil-Back.mp3",
-	},
-	{
-		name: "Burp",
-		artist: "Neil Rogers",
-		duration: "0:01",
-		mp3: "/sounds/Burp.mp3",
-	},
-	{
-		name: "Bye Bye Bye",
-		artist: "Neil Rogers",
-		duration: "0:02",
-		mp3: "/sounds/Bye-Bye-Bye.mp3",
-	},
-	{
-		name: "Crap",
-		artist: "Neil Rogers",
-		duration: "0:01",
-		mp3: "/sounds/Crap.mp3",
-	},
+	{ name: "5 Farter Death Punch", artist: "Office", mp3: "office/5 Farter Death Punch.mp3" },
+	{ name: "A Question, Billy", artist: "Office", mp3: "office/A Question, Billy.mp3" },
+	{ name: "AH", artist: "Office", mp3: "office/AH.mp3" },
+	{ name: "AHHHH", artist: "Office", mp3: "office/AHHHH.mp3" },
+	{ name: "Billy Fanfare", artist: "Office", mp3: "office/Billy Fanfare.mp3" },
+	{ name: "Billy Hum 1", artist: "Office", mp3: "office/Billy Hum 1.mp3" },
+	{ name: "Billy Hum 2", artist: "Office", mp3: "office/Billy Hum 2.mp3" },
+	{ name: "Billy Hum 3", artist: "Office", mp3: "office/Billy Hum 3.mp3" },
+	{ name: "Billy Laugh 1", artist: "Office", mp3: "office/Billy Laugh 1.mp3" },
+	{ name: "Boner 1", artist: "Office", mp3: "office/Boner1.mp3" },
+	{ name: "Bully Maguire", artist: "Office", mp3: "office/Bully Maguire.mp3" },
+	{ name: "Defeated Billy", artist: "Office", mp3: "office/Defeated Billy.mp3" },
+	{ name: "DIP-PY", artist: "Office", mp3: "office/DIP-PY.mp3" },
+	{ name: "Downward Fart", artist: "Office", mp3: "office/Downward Fart.mp3" },
+	{ name: "Dry Mop", artist: "Office", mp3: "office/Dry Mop.mp3" },
+	{ name: "Goat Ray", artist: "Office", mp3: "office/Goat Ray.mp3" },
+	{ name: "GOO!", artist: "Office", mp3: "office/GOO!.mp3" },
+	{ name: "HHHHHHHUUUUUOOOO", artist: "Office", mp3: "office/HHHHHHHUUUUUOOOO.mp3" },
+	{ name: "HHHUUUOO", artist: "Office", mp3: "office/HHHUUUOO.mp3" },
+	{ name: "Humming Billy Laugh", artist: "Office", mp3: "office/Humming Billy Laugh.mp3" },
+	{ name: "HUO", artist: "Office", mp3: "office/HUO.mp3" },
+	{ name: "Inflected Billy", artist: "Office", mp3: "office/Inflected Billy.mp3" },
+	{ name: "JEW JEW", artist: "Office", mp3: "office/JEW JEW.mp3" },
+	{ name: "Jurrassic Lomo", artist: "Office", mp3: "office/Jurrassic Lomo.mp3" },
+	{ name: "No but Yes", artist: "Office", mp3: "office/No but Yes.mp3" },
+	{ name: "Peckham Laugh", artist: "Office", mp3: "office/Peckham Laugh.mp3" },
+	{ name: "PENQUITOS", artist: "Office", mp3: "office/PENQUITOS.mp3" },
+	{ name: "PERFECT!", artist: "Office", mp3: "office/PERFECT!.mp3" },
+	{ name: "Pop Fart", artist: "Office", mp3: "office/Pop Fart.mp3" },
+	{ name: "SarcastiBilly", artist: "Office", mp3: "office/SarcastiBilly.mp3" },
+	{ name: "Soft Billy", artist: "Office", mp3: "office/Soft Billy.mp3" },
+	{ name: "TIIIIOOOTTS", artist: "Office", mp3: "office/TIIIIOOOTTS.mp3" },
+	{ name: "Usual Suspects Billy", artist: "Office", mp3: "office/Usual Suspects Billy.mp3" },
+	{ name: "Wet Fart", artist: "Office", mp3: "office/Wet Fart.mp3" },
+	{ name: "Ya (boner!)", artist: "Office", mp3: "office/Ya (boner!).mp3" },
+	{ name: "Yes but No", artist: "Office", mp3: "office/Yes but No.mp3" },
+	{ name: "You're losing it, Billy", artist: "Office", mp3: "office/You're losing it, Billy.mp3" },
+	{ name: "Yyyyeeaaaaaah", artist: "Office", mp3: "office/Yyyyeeaaaaaah.mp3" }
 ];
 
 class SoundboardApp {
@@ -142,11 +71,14 @@ class SoundboardApp {
 		// Update page title and meta description with config
 		this.updatePageMetadata();
 
-		// Register service worker
+		// Register service worker relative to repo base path
 		if ("serviceWorker" in navigator) {
 			try {
-				const registration = await navigator.serviceWorker.register("/sw.js");
-				console.log("Service Worker registered:", registration);
+				const swPath = resolvePath("sw.js");
+				const registration = await navigator.serviceWorker.register(swPath, {
+					scope: BASE_PATH,
+				});
+				console.log("Service Worker registered with scope:", registration.scope);
 
 				// Listen for updates
 				registration.addEventListener("updatefound", () => {
@@ -160,25 +92,24 @@ class SoundboardApp {
 			} catch (error) {
 				console.error("Service Worker registration failed:", error);
 			}
-		} // Listen for messages from service worker
+		}
+
+		// Listen for messages from service worker
 		if ("serviceWorker" in navigator) {
 			navigator.serviceWorker.addEventListener("message", (event) => {
 				if (event.data && event.data.type === "AUDIO_CACHED") {
 					const cachedUrl = event.data.url;
 					try {
-						// Handle both absolute and relative URLs
 						let soundPath;
 						if (cachedUrl.startsWith("http")) {
 							soundPath = new URL(cachedUrl).pathname;
 						} else {
-							// Already a relative path, use as-is
 							soundPath = cachedUrl;
 						}
 						console.log("📢 Service worker notified: Audio cached -", soundPath);
 						this.updateSoundCacheStatus(soundPath, true);
 					} catch (error) {
 						console.error("Error processing cached URL:", cachedUrl, error);
-						// Fallback: try to use the URL as-is
 						this.updateSoundCacheStatus(cachedUrl, true);
 					}
 				}
@@ -203,7 +134,6 @@ class SoundboardApp {
 			this.showOfflineIndicator();
 		});
 
-		// Show offline indicator if offline
 		if (!this.isOnline) {
 			this.showOfflineIndicator();
 		}
@@ -212,7 +142,7 @@ class SoundboardApp {
 	async loadConfig() {
 		try {
 			console.log("🔧 Loading configuration...");
-			const response = await fetch("/config.json");
+			const response = await fetch(resolvePath("config.json"));
 			if (response.ok) {
 				this.config = await response.json();
 				console.log("✅ Configuration loaded");
@@ -220,13 +150,13 @@ class SoundboardApp {
 				throw new Error("Config not found");
 			}
 		} catch (error) {
-			console.warn("⚠️ Could not load config, using defaults:", error); // Fallback configuration
+			console.warn("⚠️ Could not load config, using defaults:", error);
 			this.config = {
-				title: "Soundboard PWA",
-				shortName: "Soundboard",
-				subtitle: "SOUNDBOARD",
+				title: "Office Soundboard",
+				shortName: "Sounds",
+				subtitle: "OFFICE SOUNDS",
 				description: "A Progressive Web App soundboard",
-				headerTitle: "♫ SOUNDBOARD ♫",
+				headerTitle: "♫ OFFICE SOUNDBOARD ♫",
 				searchPlaceholder: "SEARCH FOR SOUNDS...",
 				tipText: "↑ PRESS [S] TO SEARCH • CLICK TO PLAY ↑",
 				loadingText: "LOADING SOUNDS...",
@@ -239,77 +169,62 @@ class SoundboardApp {
 	}
 
 	updatePageMetadata() {
-		// Update page title
 		document.title = `🔊 ${this.config.title}`;
 
-		// Update meta description
 		const metaDescription = document.querySelector('meta[name="description"]');
 		if (metaDescription) {
 			metaDescription.setAttribute("content", this.config.description);
 		}
 
-		// Update theme color
 		const themeColorMeta = document.querySelector('meta[name="theme-color"]');
 		if (themeColorMeta) {
 			themeColorMeta.setAttribute("content", this.config.themeColor);
 		}
 
-		// Update app title for PWA
 		const appleTitleMeta = document.querySelector('meta[name="apple-mobile-web-app-title"]');
 		if (appleTitleMeta) {
 			appleTitleMeta.setAttribute("content", this.config.title);
 		}
 
-		// Update manifest link to dynamic version
 		this.updateManifest();
 
-		// Update header content
 		const headerTitle = document.querySelector(".header h1");
 		if (headerTitle) {
 			headerTitle.textContent = this.config.headerTitle;
 		}
 
-		// Update subtitle (will be updated again when sounds load)
 		this.updateSubtitle(0);
 
-		// Update search placeholder
 		const searchInput = document.getElementById("search-input");
 		if (searchInput) {
 			searchInput.placeholder = this.config.searchPlaceholder;
 		}
 
-		// Update tip text
 		const tipElement = document.querySelector(".tip");
 		if (tipElement) {
 			tipElement.textContent = this.config.tipText;
 		}
 
-		// Update loading text
 		const loadingElement = document.querySelector(".loading");
 		if (loadingElement) {
 			loadingElement.textContent = this.config.loadingText;
 		}
 
-		// Update offline indicator text
 		const offlineIndicator = document.getElementById("offline-indicator");
 		if (offlineIndicator) {
 			offlineIndicator.textContent = this.config.offlineText;
 		}
 	}
+
 	async updateManifest() {
 		try {
-			// Instead of using blob URLs, we'll update the existing manifest link
-			// and let the service worker handle manifest requests dynamically
 			console.log("🔧 Manifest will be updated via service worker");
-
-			// Store config in a global variable for service worker access
 			window.soundboardConfig = this.config;
 
-			// Force a manifest refresh by updating the href with a timestamp
 			let manifestLink = document.querySelector('link[rel="manifest"]');
 			if (manifestLink) {
 				const timestamp = Date.now();
-				manifestLink.href = `/manifest.json?t=${timestamp}`;
+				manifestLink.href = resolvePath(`manifest.json?t=${timestamp}`);
 			}
 		} catch (error) {
 			console.warn("⚠️ Could not update manifest:", error);
@@ -324,16 +239,16 @@ class SoundboardApp {
 	}
 
 	setupEventListeners() {
-		// Search input
 		const searchInput = document.getElementById("search-input");
-		searchInput.addEventListener("input", (e) => {
-			this.searchQuery = e.target.value;
-			this.filterSounds();
-		});
+		if (searchInput) {
+			searchInput.addEventListener("input", (e) => {
+				this.searchQuery = e.target.value;
+				this.filterSounds();
+			});
+		}
 
-		// Keyboard shortcut for search (S key)
 		document.addEventListener("keydown", (e) => {
-			if ((e.key === "s" || e.key === "S") && document.activeElement !== searchInput) {
+			if ((e.key === "s" || e.key === "S") && searchInput && document.activeElement !== searchInput) {
 				e.preventDefault();
 				searchInput.focus();
 				searchInput.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -343,16 +258,15 @@ class SoundboardApp {
 
 	async loadSounds() {
 		try {
-			// Try to load from cache first (for offline support)
 			const cachedSounds = await this.getCachedSounds();
 			if (cachedSounds && cachedSounds.length > 0) {
 				console.log(`📦 Loaded ${cachedSounds.length} sounds from cache`);
 				this.sounds = cachedSounds;
 				await this.renderSounds();
-			} // Always try to fetch fresh data if online
+			}
+
 			if (this.isOnline) {
-				// Try multiple possible API endpoints
-				const apiUrls = ["/api/sounds.json", "/public/api/sounds.json"];
+				const apiUrls = [resolvePath("api/sounds.json"), resolvePath("public/api/sounds.json")];
 				let dataLoaded = false;
 
 				for (const url of apiUrls) {
@@ -366,7 +280,6 @@ class SoundboardApp {
 							this.cacheSounds(this.sounds);
 							await this.renderSounds();
 
-							// Pre-cache popular sounds for offline use
 							this.preCachePopularSounds();
 							dataLoaded = true;
 							console.log(`✅ Loaded ${this.sounds.length} sounds from ${url}`);
@@ -381,11 +294,13 @@ class SoundboardApp {
 					console.warn(
 						"⚠️ Could not load sounds from any API endpoint, using cached or fallback data",
 					);
+					if (!this.sounds.length) {
+						await this.loadFallbackSounds();
+					}
 				}
 			}
 		} catch (error) {
 			console.error("💥 Error loading sounds:", error);
-			// Fallback to embedded data if all else fails
 			await this.loadFallbackSounds();
 		}
 	}
@@ -408,11 +323,12 @@ class SoundboardApp {
 			console.error("Error caching sounds:", error);
 		}
 	}
+
 	async loadFallbackSounds() {
-		// Embedded fallback data - this would be populated during build
 		this.sounds = window.FALLBACK_SOUNDS || [];
 		await this.renderSounds();
 	}
+
 	async filterSounds() {
 		if (!this.searchQuery.trim()) {
 			this.filteredSounds = [...this.sounds];
@@ -425,8 +341,10 @@ class SoundboardApp {
 		}
 		await this.renderSounds();
 	}
+
 	async renderSounds() {
 		const container = document.getElementById("sounds-container");
+		if (!container) return;
 
 		if (!this.filteredSounds.length && this.searchQuery) {
 			container.innerHTML = `
@@ -440,25 +358,23 @@ class SoundboardApp {
 		if (!this.sounds.length) {
 			container.innerHTML = `
                 <div class="loading">
-                    ${this.isOnline ? this.config.loadingText : "✗ NO SOUNDS AVAILABLE OFFLINE ✗"}
+                    ${this.isOnline ? this.config?.loadingText || "LOADING..." : "✗ NO SOUNDS AVAILABLE OFFLINE ✗"}
                 </div>
             `;
 			return;
 		}
 
-		// Sort sounds alphabetically
 		const soundsToShow = this.filteredSounds.length ? this.filteredSounds : this.sounds;
 		soundsToShow.sort((a, b) => a.name.localeCompare(b.name));
 
-		// Update sound count using the new method
 		this.updateSubtitle(this.sounds.length);
 
-		// Check which sounds are cached
 		const soundsWithCacheStatus = await this.checkCachedSounds();
 		const soundsToShowWithCache = soundsToShow.map((sound) => {
 			const cached = soundsWithCacheStatus.find((s) => s.mp3 === sound.mp3);
 			return { ...sound, isCached: cached?.isCached || false };
-		}); // Render sound buttons
+		});
+
 		container.innerHTML = soundsToShowWithCache
 			.map(
 				(sound) => `
@@ -473,7 +389,7 @@ class SoundboardApp {
         `,
 			)
 			.join("");
-		// Add click listeners to sound buttons
+
 		container.querySelectorAll(".sound-button").forEach((btn) => {
 			btn.addEventListener("click", (e) => {
 				const sound = JSON.parse(e.currentTarget.dataset.sound);
@@ -481,22 +397,21 @@ class SoundboardApp {
 			});
 		});
 	}
+
 	async playSound(sound) {
 		try {
-			console.log("🎵 Playing sound:", sound.mp3);
+			const audioPath = resolvePath(sound.mp3);
+			console.log("🎵 Playing sound:", audioPath);
 
-			// Explicitly fetch the audio file to ensure it goes through service worker
-			const response = await fetch(sound.mp3);
+			const response = await fetch(audioPath);
 			if (!response.ok) {
 				throw new Error(`Failed to fetch audio: ${response.status}`);
 			}
 
-			// Create audio from the fetched response
 			const audioBlob = await response.blob();
 			const audioUrl = URL.createObjectURL(audioBlob);
 			const audio = new Audio(audioUrl);
 
-			// Clean up blob URL after playing
 			audio.addEventListener("ended", () => {
 				URL.revokeObjectURL(audioUrl);
 			});
@@ -506,9 +421,8 @@ class SoundboardApp {
 				URL.revokeObjectURL(audioUrl);
 				throw new Error("Could not play sound");
 			});
-			await audio.play();
 
-			// Update UI to show this sound is now cached
+			await audio.play();
 			this.updateSoundCacheStatus(sound.mp3, true);
 		} catch (error) {
 			if (error.name === "NotAllowedError") {
@@ -521,23 +435,24 @@ class SoundboardApp {
 	}
 
 	async cacheAudioFile(soundPath) {
-		// Send message to service worker to cache this audio file
 		if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
 			navigator.serviceWorker.controller.postMessage({
 				type: "CACHE_AUDIO",
-				url: soundPath,
+				url: resolvePath(soundPath),
 			});
 		}
 	}
 
 	async preCachePopularSounds() {
-		// Pre-cache the first 20 sounds for better offline experience
 		if (
 			"serviceWorker" in navigator &&
 			navigator.serviceWorker.controller &&
 			this.sounds.length > 0
 		) {
-			const popularSounds = this.sounds.slice(0, 20);
+			const popularSounds = this.sounds.slice(0, 20).map((s) => ({
+				...s,
+				mp3: resolvePath(s.mp3),
+			}));
 			navigator.serviceWorker.controller.postMessage({
 				type: "CACHE_SOUNDS",
 				sounds: popularSounds,
@@ -548,6 +463,7 @@ class SoundboardApp {
 
 	showStatus(message, type = "info") {
 		const status = document.getElementById("status");
+		if (!status) return;
 		status.textContent = message;
 		status.className = `status show ${type}`;
 
@@ -557,11 +473,13 @@ class SoundboardApp {
 	}
 
 	showOfflineIndicator() {
-		document.getElementById("offline-indicator").classList.add("show");
+		const el = document.getElementById("offline-indicator");
+		if (el) el.classList.add("show");
 	}
 
 	hideOfflineIndicator() {
-		document.getElementById("offline-indicator").classList.remove("show");
+		const el = document.getElementById("offline-indicator");
+		if (el) el.classList.remove("show");
 	}
 
 	async checkForUpdates() {
@@ -572,7 +490,6 @@ class SoundboardApp {
 			const lastUpdate = timestamp ? parseInt(timestamp) : 0;
 			const now = Date.now();
 
-			// Check for updates every hour
 			if (now - lastUpdate > 3600000) {
 				await this.loadSounds();
 			}
@@ -582,7 +499,6 @@ class SoundboardApp {
 	}
 
 	async checkCachedSounds() {
-		// Check which sounds are cached by the service worker
 		if ("caches" in window) {
 			try {
 				const cache = await caches.open("neil-rogers-sounds-v2");
@@ -591,7 +507,7 @@ class SoundboardApp {
 
 				return this.sounds.map((sound) => ({
 					...sound,
-					isCached: cachedUrls.some((url) => url.endsWith(sound.mp3)),
+					isCached: cachedUrls.some((url) => url.endsWith(encodeURI(sound.mp3)) || url.endsWith(sound.mp3)),
 				}));
 			} catch (error) {
 				console.error("Error checking cached sounds:", error);
@@ -606,8 +522,8 @@ class SoundboardApp {
 		div.textContent = text;
 		return div.innerHTML;
 	}
+
 	updateSoundCacheStatus(soundPath, isCached) {
-		// Find the button for this sound and update its cached status
 		const buttons = document.querySelectorAll(".sound-button");
 		buttons.forEach((button) => {
 			try {
