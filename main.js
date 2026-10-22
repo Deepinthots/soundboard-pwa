@@ -117,7 +117,7 @@ class SoundboardApp {
 	}
 
 	updatePageMetadata() {
-		document.title = `🔊 ${this.config.title}`;
+		document.title = "🔊 " + this.config.title;
 
 		const headerTitle = document.querySelector(".header h1");
 		if (headerTitle) {
@@ -143,7 +143,7 @@ class SoundboardApp {
 	updateSubtitle(soundCount) {
 		const subtitle = document.querySelector(".header .subtitle");
 		if (subtitle) {
-			subtitle.innerHTML = `${this.config.subtitle} • <span id="sound-count">${soundCount}</span> ${this.config.soundCountText}`;
+			subtitle.innerHTML = this.config.subtitle + ' • <span id="sound-count">' + soundCount + '</span> ' + this.config.soundCountText;
 		}
 	}
 
@@ -189,11 +189,7 @@ class SoundboardApp {
 		if (!container) return;
 
 		if (!this.filteredSounds.length && this.searchQuery) {
-			container.innerHTML = `
-				<div class="loading">
-					✗ NO SOUNDS FOUND FOR "${this.searchQuery}" ✗
-				</div>
-			`;
+			container.innerHTML = '<div class="loading">✗ NO SOUNDS FOUND FOR "' + this.escapeHtml(this.searchQuery) + '" ✗</div>';
 			return;
 		}
 
@@ -202,27 +198,24 @@ class SoundboardApp {
 
 		this.updateSubtitle(this.sounds.length);
 
-		container.innerHTML = soundsToShow
-			.map(
-				(sound, index) => `
-			<button 
-				class="sound-button" 
-				data-index="${index}"
-			>
-				<div class="sound-name">${this.escapeHtml(sound.name)}</div>
-				<div class="sound-artist">${this.escapeHtml(sound.artist)}</div>
-			</button>
-		`,
-			)
-			.join("");
+		let html = "";
+		for (let i = 0; i < soundsToShow.length; i++) {
+			const sound = soundsToShow[i];
+			html += '<button class="sound-button" data-index="' + i + '">';
+			html += '<div class="sound-name">' + this.escapeHtml(sound.name) + '</div>';
+			html += '<div class="sound-artist">' + this.escapeHtml(sound.artist) + '</div>';
+			html += '</button>';
+		}
+		container.innerHTML = html;
 
-		container.querySelectorAll(".sound-button").forEach((btn) => {
-			btn.addEventListener("click", (e) => {
-				const index = e.currentTarget.dataset.index;
+		const buttons = container.querySelectorAll(".sound-button");
+		for (let i = 0; i < buttons.length; i++) {
+			buttons[i].addEventListener("click", (e) => {
+				const index = e.currentTarget.getAttribute("data-index");
 				const sound = soundsToShow[index];
 				this.playSound(sound);
 			});
-		});
+		}
 	}
 
 	async playSound(sound) {
@@ -246,7 +239,7 @@ class SoundboardApp {
 		const status = document.getElementById("status");
 		if (!status) return;
 		status.textContent = message;
-		status.className = `status show ${type}`;
+		status.className = "status show " + type;
 
 		setTimeout(() => {
 			status.classList.remove("show");
