@@ -11,46 +11,46 @@ const resolvePath = (relativeUrl) => {
 	return `${BASE_PATH}${cleanUrl}`;
 };
 
-// Office sounds list pointing inside sounds/office/
+// Office sounds list matching the exact "sounds/Office/" folder and filenames
 window.OFFICE_SOUNDS = [
-	{ name: "5 Farter Death Punch", artist: "Office", mp3: "sounds/office/5 Farter Death Punch.mp3" },
-	{ name: "A Question, Billy", artist: "Office", mp3: "sounds/office/A Question, Billy.mp3" },
-	{ name: "AH", artist: "Office", mp3: "sounds/office/AH.mp3" },
-	{ name: "AHHHH", artist: "Office", mp3: "sounds/office/AHHHH.mp3" },
-	{ name: "Billy Fanfare", artist: "Office", mp3: "sounds/office/Billy Fanfare.mp3" },
-	{ name: "Billy Hum 1", artist: "Office", mp3: "sounds/office/Billy Hum 1.mp3" },
-	{ name: "Billy Hum 2", artist: "Office", mp3: "sounds/office/Billy Hum 2.mp3" },
-	{ name: "Billy Hum 3", artist: "Office", mp3: "sounds/office/Billy Hum 3.mp3" },
-	{ name: "Billy Laugh 1", artist: "Office", mp3: "sounds/office/Billy Laugh 1.mp3" },
-	{ name: "Boner 1", artist: "Office", mp3: "sounds/office/Boner1.mp3" },
-	{ name: "Bully Maguire", artist: "Office", mp3: "sounds/office/Bully Maguire.mp3" },
-	{ name: "Defeated Billy", artist: "Office", mp3: "sounds/office/Defeated Billy.mp3" },
-	{ name: "DIP-PY", artist: "Office", mp3: "sounds/office/DIP-PY.mp3" },
-	{ name: "Downward Fart", artist: "Office", mp3: "sounds/office/Downward Fart.mp3" },
-	{ name: "Dry Mop", artist: "Office", mp3: "sounds/office/Dry Mop.mp3" },
-	{ name: "Goat Ray", artist: "Office", mp3: "sounds/office/Goat Ray.mp3" },
-	{ name: "GOO!", artist: "Office", mp3: "sounds/office/GOO!.mp3" },
-	{ name: "HHHHHHHUUUUUOOOO", artist: "Office", mp3: "sounds/office/HHHHHHHUUUUUOOOO.mp3" },
-	{ name: "HHHUUUOO", artist: "Office", mp3: "sounds/office/HHHUUUOO.mp3" },
-	{ name: "Humming Billy Laugh", artist: "Office", mp3: "sounds/office/Humming Billy Laugh.mp3" },
-	{ name: "HUO", artist: "Office", mp3: "office/HUO.mp3" },
-	{ name: "Inflected Billy", artist: "Office", mp3: "sounds/office/Inflected Billy.mp3" },
-	{ name: "JEW JEW", artist: "Office", mp3: "sounds/office/JEW JEW.mp3" },
-	{ name: "Jurrassic Lomo", artist: "Office", mp3: "sounds/office/Jurrassic Lomo.mp3" },
-	{ name: "No but Yes", artist: "Office", mp3: "sounds/office/No but Yes.mp3" },
-	{ name: "Peckham Laugh", artist: "Office", mp3: "sounds/office/Peckham Laugh.mp3" },
-	{ name: "PENQUITOS", artist: "Office", mp3: "sounds/office/PENQUITOS.mp3" },
-	{ name: "PERFECT!", artist: "Office", mp3: "sounds/office/PERFECT!.mp3" },
-	{ name: "Pop Fart", artist: "Office", mp3: "sounds/office/Pop Fart.mp3" },
-	{ name: "SarcastiBilly", artist: "Office", mp3: "sounds/office/SarcastiBilly.mp3" },
-	{ name: "Soft Billy", artist: "Office", mp3: "sounds/office/Soft Billy.mp3" },
-	{ name: "TIIIIOOOTTS", artist: "Office", mp3: "sounds/office/TIIIIOOOTTS.mp3" },
-	{ name: "Usual Suspects Billy", artist: "Office", mp3: "sounds/office/Usual Suspects Billy.mp3" },
-	{ name: "Wet Fart", artist: "Office", mp3: "sounds/office/Wet Fart.mp3" },
-	{ name: "Ya (boner!)", artist: "Office", mp3: "sounds/office/Ya (boner!).mp3" },
-	{ name: "Yes but No", artist: "Office", mp3: "sounds/office/Yes but No.mp3" },
-	{ name: "You're losing it, Billy", artist: "Office", mp3: "sounds/office/You're losing it, Billy.mp3" },
-	{ name: "Yyyyeeaaaaaah", artist: "Office", mp3: "sounds/office/Yyyyeeaaaaaah.mp3" }
+	{ name: "5 Farter Death Punch", artist: "Office", mp3: "sounds/Office/5 Farter Death Punch.mp3" },
+	{ name: "A Question, Billy", artist: "Office", mp3: "sounds/Office/A Question, Billy.mp3" },
+	{ name: "AH", artist: "Office", mp3: "sounds/Office/AH.mp3" },
+	{ name: "AHHHH", artist: "Office", mp3: "sounds/Office/AHHHH.mp3" },
+	{ name: "Billy Fanfare", artist: "Office", mp3: "sounds/Office/Billy Fanfare.mp3" },
+	{ name: "Billy Hum 1", artist: "Office", mp3: "sounds/Office/Billy Hum 1.mp3" },
+	{ name: "Billy Hum 2", artist: "Office", mp3: "sounds/Office/Billy Hum 2.mp3" },
+	{ name: "Billy Hum 3", artist: "Office", mp3: "sounds/Office/Billy Hum 3.mp3" },
+	{ name: "Billy Laugh 1", artist: "Office", mp3: "sounds/Office/Billy Laugh 1.mp3" },
+	{ name: "Boner 1", artist: "Office", mp3: "sounds/Office/Boner 1.mp3" },
+	{ name: "Bully Maguire", artist: "Office", mp3: "sounds/Office/Bully Maguire.mp3" },
+	{ name: "Defeated Billy", artist: "Office", mp3: "sounds/Office/Defeated Billy.mp3" },
+	{ name: "DIP-PY", artist: "Office", mp3: "sounds/Office/DIP-PY.mp3" },
+	{ name: "Downward Fart", artist: "Office", mp3: "sounds/Office/Downward Fart.mp3" },
+	{ name: "Dry Mop", artist: "Office", mp3: "sounds/Office/Dry Mop.mp3" },
+	{ name: "Goat Ray", artist: "Office", mp3: "sounds/Office/Goat Ray.mp3" },
+	{ name: "GOO!", artist: "Office", mp3: "sounds/Office/GOO!.mp3" },
+	{ name: "HHHHHHHUUUUUOOOO", artist: "Office", mp3: "sounds/Office/HHHHHHHUUUUUOOOO.mp3" },
+	{ name: "HHHUUUOO", artist: "Office", mp3: "sounds/Office/HHHUUUOO.mp3" },
+	{ name: "Humming Billy Laugh", artist: "Office", mp3: "sounds/Office/Humming Billy Laugh.mp3" },
+	{ name: "HUO", artist: "Office", mp3: "sounds/Office/HUO.mp3" },
+	{ name: "Inflected Billy", artist: "Office", mp3: "sounds/Office/Inflected Billy.mp3" },
+	{ name: "JEW JEW", artist: "Office", mp3: "sounds/Office/JEW JEW.mp3" },
+	{ name: "Jurrassic Lomo", artist: "Office", mp3: "sounds/Office/Jurrassic Lomo.mp3" },
+	{ name: "No but Yes", artist: "Office", mp3: "sounds/Office/No but Yes.mp3" },
+	{ name: "Peckham Laugh", artist: "Office", mp3: "sounds/Office/Peckham Laugh.mp3" },
+	{ name: "PENQUITOS", artist: "Office", mp3: "sounds/Office/PENQUITOS.mp3" },
+	{ name: "PERFECT!", artist: "Office", mp3: "sounds/Office/PERFECT!.mp3" },
+	{ name: "Pop Fart", artist: "Office", mp3: "sounds/Office/Pop Fart.mp3" },
+	{ name: "SarcastiBilly", artist: "Office", mp3: "sounds/Office/SarcastiBilly.mp3" },
+	{ name: "Soft Billy", artist: "Office", mp3: "sounds/Office/Soft Billy.mp3" },
+	{ name: "TIIIIOOOTTS", artist: "Office", mp3: "sounds/Office/TIIIIOOOTTS.mp3" },
+	{ name: "Usual Suspects Billy", artist: "Office", mp3: "sounds/Office/Usual Suspects Billy.mp3" },
+	{ name: "Wet Fart", artist: "Office", mp3: "sounds/Office/Wet Fart.mp3" },
+	{ name: "Ya (boner!)", artist: "Office", mp3: "sounds/Office/Ya (boner!).mp3" },
+	{ name: "Yes but No", artist: "Office", mp3: "sounds/Office/Yes but No.mp3" },
+	{ name: "You're losing it, Billy", artist: "Office", mp3: "sounds/Office/You're losing it, Billy.mp3" },
+	{ name: "Yyyyeeaaaaaah", artist: "Office", mp3: "sounds/Office/Yyyyeeaaaaaah.mp3" }
 ];
 
 class SoundboardApp {
@@ -239,56 +239,4 @@ class SoundboardApp {
 			if (error.name === "NotAllowedError") {
 				this.showStatus("⚠ CLICK ANYWHERE TO ENABLE AUDIO ⚠", "error");
 			} else {
-				this.showStatus("✗ COULD NOT PLAY SOUND ✗", "error");
-				console.error("Audio playback error:", error);
-			}
-		}
-	}
-
-	showStatus(message, type = "info") {
-		const status = document.getElementById("status");
-		if (!status) return;
-		status.textContent = message;
-		status.className = `status show ${type}`;
-
-		setTimeout(() => {
-			status.classList.remove("show");
-		}, 3000);
-	}
-
-	showOfflineIndicator() {
-		const el = document.getElementById("offline-indicator");
-		if (el) el.classList.add("show");
-	}
-
-	hideOfflineIndicator() {
-		const el = document.getElementById("offline-indicator");
-		if (el) el.classList.remove("show");
-	}
-
-	escapeHtml(text) {
-		const div = document.createElement("div");
-		div.textContent = text;
-		return div.innerHTML;
-	}
-}
-
-// Initialize on DOM load
-document.addEventListener("DOMContentLoaded", () => {
-	new SoundboardApp();
-});
-
-// Unlock audio context on user gesture
-document.addEventListener(
-	"click",
-	() => {
-		const AudioContext = window.AudioContext || window.webkitAudioContext;
-		if (AudioContext) {
-			const context = new AudioContext();
-			if (context.state === "suspended") {
-				context.resume();
-			}
-		}
-	},
-	{ once: true },
-);
+				this.showStatus("✗ COULD NOT PLAY SOUND ✗", "error
