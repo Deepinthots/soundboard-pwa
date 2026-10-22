@@ -1,6 +1,5 @@
 // Main soundboard application
 
-// Automatically determine base path for GitHub Pages or local preview
 const BASE_PATH = (() => {
 	const path = window.location.pathname;
 	return path.endsWith("/") ? path : path.substring(0, path.lastIndexOf("/") + 1);
@@ -11,7 +10,6 @@ const resolvePath = (relativeUrl) => {
 	return `${BASE_PATH}${cleanUrl}`;
 };
 
-// Office sounds list matching the exact "sounds/Office/" folder and filenames
 window.OFFICE_SOUNDS = [
 	{ name: "5 Farter Death Punch", artist: "Office", mp3: "sounds/Office/5 Farter Death Punch.mp3" },
 	{ name: "A Question, Billy", artist: "Office", mp3: "sounds/Office/A Question, Billy.mp3" },
@@ -115,9 +113,7 @@ class SoundboardApp {
 				const data = await response.json();
 				this.config = { ...this.config, ...data };
 			}
-		} catch (e) {
-			// Maintain defaults
-		}
+		} catch (e) {}
 	}
 
 	updatePageMetadata() {
@@ -208,10 +204,10 @@ class SoundboardApp {
 
 		container.innerHTML = soundsToShow
 			.map(
-				(sound) => `
+				(sound, index) => `
 			<button 
 				class="sound-button" 
-				data-sound='${JSON.stringify(sound).replace(/'/g, "&apos;")}'
+				data-index="${index}"
 			>
 				<div class="sound-name">${this.escapeHtml(sound.name)}</div>
 				<div class="sound-artist">${this.escapeHtml(sound.artist)}</div>
@@ -222,7 +218,8 @@ class SoundboardApp {
 
 		container.querySelectorAll(".sound-button").forEach((btn) => {
 			btn.addEventListener("click", (e) => {
-				const sound = JSON.parse(e.currentTarget.dataset.sound);
+				const index = e.currentTarget.dataset.index;
+				const sound = soundsToShow[index];
 				this.playSound(sound);
 			});
 		});
@@ -239,4 +236,54 @@ class SoundboardApp {
 			if (error.name === "NotAllowedError") {
 				this.showStatus("⚠ CLICK ANYWHERE TO ENABLE AUDIO ⚠", "error");
 			} else {
-				this.showStatus("✗ COULD NOT PLAY SOUND ✗", "error
+				this.showStatus("✗ COULD NOT PLAY SOUND ✗", "error");
+				console.error("Audio playback error:", error);
+			}
+		}
+	}
+
+	showStatus(message, type = "info") {
+		const status = document.getElementById("status");
+		if (!status) return;
+		status.textContent = message;
+		status.className = `status show ${type}`;
+
+		setTimeout(() => {
+			status.classList.remove("show");
+		}, 3000);
+	}
+
+	showOfflineIndicator() {
+		const el = document.getElementById("offline-indicator");
+		if (el) el.classList.add("show");
+	}
+
+	hideOfflineIndicator() {
+		const el = document.getElementById("offline-indicator");
+		if (el) el.classList.remove("show");
+	}
+
+	escapeHtml(text) {
+		const div = document.createElement("div");
+		div.textContent = text;
+		return div.innerHTML;
+	}
+}
+
+document.addEventListener("DOMContentLoaded", () => {
+	new SoundboardApp();
+});
+
+document.addEventListener(
+	"click",
+	() => {
+		const AudioContext = window.AudioContext || window.webkitAudioContext;
+		if (AudioContext) {
+			const context = new AudioContext();
+			if (context.state === "suspended") {
+				context.resume();
+			}
+		}
+	},
+	{ once: true },
+);
