@@ -95,29 +95,42 @@
     audio.playbackRate = pitch;
   }
 
-  function setPitch(value) {
-    const parsed = Number(value);
 
-    if (!Number.isFinite(parsed)) return;
+function setPitch(value) {
+  const parsed = Number(value);
 
-    pitch = Math.max(0.50, Math.min(3.0, parsed));
+  if (!Number.isFinite(parsed)) return;
 
-    const slider = $('pitch-slider');
-    const display = $('pitch-value');
+  // The slider runs from -100 to +100.
+  // -100 = 0.50x, 0 = 1.00x, +100 = 3.00x.
+  const position = Math.max(-100, Math.min(100, parsed));
 
-    if (slider) {
-      slider.value = pitch.toFixed(2);
-    }
-
-    if (display) {
-      display.textContent = `${pitch.toFixed(2)}×`;
-    }
-
-    // Changes pitch during playback too.
-    if (activeAudio) {
-      applyPitch(activeAudio);
-    }
+  if (position <= 0) {
+    pitch = 1 + (position / 100) * 0.5;
+  } else {
+    pitch = 1 + (position / 100) * 2.0;
   }
+
+  const slider = $('pitch-slider');
+  const display = $('pitch-value');
+
+  if (slider) {
+    slider.value = String(position);
+  }
+
+  if (display) {
+    display.textContent = `${pitch.toFixed(2)}×`;
+  }
+
+  // Update the current audio immediately.
+  if (activeAudio) {
+    applyPitch(activeAudio);
+  }
+}
+
+function resetPitch() {
+  setPitch(0);
+}
 
   function render() {
     const container = $('sounds-container');
@@ -239,12 +252,12 @@
     );
 
     // Return pitch and playback speed to normal.
-    $('pitch-reset')?.addEventListener(
-      'click',
-      () => setPitch(1.0)
-    );
+$('pitch-reset')?.addEventListener(
+  'click',
+  resetPitch
+);
 
-    setPitch(1.0);
+resetPitch();
 
     // S key focuses search.
     document.addEventListener('keydown', event => {
