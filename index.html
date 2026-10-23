@@ -8,6 +8,7 @@
   <meta name="description" content="The Archives">
   <title>The Archives</title>
   <link rel="icon" href="./public/favicon.svg">
+
   <style>
     :root {
       --bg: #080a09;
@@ -22,7 +23,9 @@
       --danger: #d48686;
     }
 
-    * { box-sizing: border-box; }
+    * {
+      box-sizing: border-box;
+    }
 
     body {
       margin: 0;
@@ -41,7 +44,9 @@
       min-height: calc(100vh - 70px);
     }
 
-    .header { margin-bottom: 22px; }
+    .header {
+      margin-bottom: 22px;
+    }
 
     h1 {
       margin: 0 0 5px;
@@ -57,7 +62,9 @@
       font-size: 0.85rem;
     }
 
-    .controls { margin-bottom: 16px; }
+    .controls {
+      margin-bottom: 16px;
+    }
 
     .search-input {
       width: 100%;
@@ -71,7 +78,9 @@
       outline: none;
     }
 
-    .search-input::placeholder { color: var(--muted); }
+    .search-input::placeholder {
+      color: var(--muted);
+    }
 
     .search-input:focus {
       border-color: var(--accent-light);
@@ -85,6 +94,7 @@
     }
 
     /* Pitch controls */
+
     .pitch-panel {
       background: var(--panel);
       border: 1px solid var(--border);
@@ -165,6 +175,8 @@
       font-size: 0.72rem;
     }
 
+    /* Sound buttons */
+
     .sounds-container {
       display: grid;
       grid-template-columns:
@@ -188,8 +200,11 @@
       text-align: left;
       font: inherit;
       cursor: pointer;
-      transition: background .15s, border-color .15s,
-                  box-shadow .15s, transform .15s;
+      transition:
+        background .15s,
+        border-color .15s,
+        box-shadow .15s,
+        transform .15s;
     }
 
     .sound-button:hover {
@@ -238,6 +253,8 @@
       text-align: center;
     }
 
+    /* Error and offline messages */
+
     .status {
       position: fixed;
       top: 16px;
@@ -255,8 +272,13 @@
       overflow-wrap: anywhere;
     }
 
-    .status.show { opacity: 1; }
-    .status.success { border-color: var(--accent-light); }
+    .status.show {
+      opacity: 1;
+    }
+
+    .status.success {
+      border-color: var(--accent-light);
+    }
 
     .offline-indicator {
       display: none;
@@ -271,7 +293,92 @@
       font-size: 0.8rem;
     }
 
-    .offline-indicator.show { display: block; }
+    .offline-indicator.show {
+      display: block;
+    }
+
+    /* Update notification */
+
+    .update-banner {
+      display: none;
+      position: fixed;
+      right: 18px;
+      bottom: 18px;
+      z-index: 9999;
+      width: min(350px, calc(100vw - 36px));
+      background: var(--panel);
+      border: 1px solid var(--accent);
+      border-radius: 11px;
+      padding: 18px;
+      box-shadow: 0 10px 35px rgba(0,0,0,.55);
+    }
+
+    .update-banner.show {
+      display: block;
+    }
+
+    .update-heading {
+      margin: 0 0 8px;
+      color: var(--text);
+      font-size: 0.95rem;
+      font-weight: 650;
+    }
+
+    .update-description {
+      color: var(--muted);
+      font-size: 0.82rem;
+      line-height: 1.5;
+      margin: 0 0 16px;
+    }
+
+    .update-actions {
+      display: flex;
+      gap: 9px;
+    }
+
+    .update-button {
+      background: var(--accent);
+      border: 1px solid var(--accent);
+      border-radius: 7px;
+      color: white;
+      padding: 9px 15px;
+      font: inherit;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .update-button:hover {
+      background: #397d6a;
+    }
+
+    .update-button:disabled {
+      opacity: .6;
+      cursor: wait;
+    }
+
+    .update-later {
+      background: #242a27;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      padding: 9px 15px;
+      font: inherit;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+
+    .update-later:hover {
+      background: var(--panel-hover);
+    }
+
+    .update-button:focus-visible,
+    .update-later:focus-visible {
+      outline: 2px solid var(--accent-light);
+      outline-offset: 2px;
+    }
+
+    /* Footer */
 
     .footer {
       max-width: 1600px;
@@ -296,10 +403,16 @@
       font-size: 0.8rem;
     }
 
-    .footer-link:hover { text-decoration: underline; }
+    .footer-link:hover {
+      text-decoration: underline;
+    }
+
+    /* Mobile layout */
 
     @media (max-width: 600px) {
-      main { padding: 22px 10px 32px; }
+      main {
+        padding: 22px 10px 32px;
+      }
 
       .sounds-container {
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -311,24 +424,40 @@
         padding: 11px 26px 11px 10px;
       }
 
-      .sound-name { font-size: 0.82rem; }
-      .pitch-panel { padding: 12px; }
-      .pitch-labels { font-size: 0.63rem; }
-      .footer { padding: 16px 10px; }
+      .sound-name {
+        font-size: 0.82rem;
+      }
+
+      .pitch-panel {
+        padding: 12px;
+      }
+
+      .pitch-labels {
+        font-size: 0.63rem;
+      }
+
+      .footer {
+        padding: 16px 10px;
+      }
     }
 
     @media (max-width: 350px) {
-      .sounds-container { grid-template-columns: 1fr; }
+      .sounds-container {
+        grid-template-columns: 1fr;
+      }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .sound-button { transition: none; }
+      .sound-button {
+        transition: none;
+      }
     }
   </style>
 </head>
 
 <body>
   <main>
+
     <header class="header">
       <h1>The Archives</h1>
       <p class="subtitle">
@@ -337,6 +466,7 @@
     </header>
 
     <section class="controls" aria-label="Soundboard controls">
+
       <input
         id="search-input"
         class="search-input"
@@ -345,36 +475,48 @@
         aria-label="Search sounds"
         autocomplete="off"
       >
+
       <p class="tip">Click any sound to play</p>
 
       <div class="pitch-panel">
+
         <div class="pitch-header">
           <label class="pitch-title" for="pitch-slider">
             Pitch
           </label>
+
           <div class="pitch-actions">
-            <output id="pitch-value" class="pitch-value"
-                    for="pitch-slider">1.00×</output>
-            <button id="pitch-reset"
-                    class="pitch-reset"
-                    type="button">Reset</button>
+            <output
+              id="pitch-value"
+              class="pitch-value"
+              for="pitch-slider"
+            >1.00×</output>
+
+            <button
+              id="pitch-reset"
+              class="pitch-reset"
+              type="button"
+            >Reset</button>
           </div>
         </div>
-      <input
-  type="range"
-  id="pitch-slider"
-  class="pitch-slider"
-  min="-100"
-  max="100"
-  step="1"
-  value="0"
-  aria-label="Pitch and playback speed"
->
+
+        <input
+          type="range"
+          id="pitch-slider"
+          class="pitch-slider"
+          min="-100"
+          max="100"
+          step="1"
+          value="0"
+          aria-label="Pitch and playback speed"
+        >
+
         <div class="pitch-labels">
-          <span>Deep / Slow</span>
-          <span>Normal</span>
-          <span>High / Fast</span>
+          <span>0.50× Deep / Slow</span>
+          <span>1.00× Normal</span>
+          <span>3.00× High / Fast</span>
         </div>
+
       </div>
     </section>
 
@@ -385,25 +527,293 @@
     >
       <div class="loading">Loading sounds...</div>
     </section>
+
   </main>
 
   <footer class="footer">
     <div class="footer-content">The Archives</div>
+
     <nav aria-label="Links">
-      <a class="footer-link"
-         href="https://github.com/Deepinthots/soundboard-pwa"
-         target="_blank"
-         rel="noopener noreferrer">GitHub</a>
+      <a
+        class="footer-link"
+        href="https://github.com/Deepinthots/soundboard-pwa"
+        target="_blank"
+        rel="noopener noreferrer"
+      >GitHub</a>
     </nav>
   </footer>
 
-  <div id="status" class="status"
-       role="status" aria-live="polite"></div>
+  <div
+    id="status"
+    class="status"
+    role="status"
+    aria-live="polite"
+  ></div>
 
-  <div id="offline-indicator" class="offline-indicator">
+  <div
+    id="offline-indicator"
+    class="offline-indicator"
+  >
     Offline — sounds require a connection
   </div>
 
-  <script src="./main.js?v=20261022-pitch1" defer></script>
+  <!-- Update notification -->
+
+  <div
+    id="archives-update-banner"
+    class="update-banner"
+    role="status"
+    aria-live="polite"
+  >
+    <h2 class="update-heading">
+      Update Available
+    </h2>
+
+    <p class="update-description">
+      A newer version of The Archives is available.
+      Update to get the latest changes.
+    </p>
+
+    <div class="update-actions">
+      <button
+        id="archives-update-now"
+        class="update-button"
+        type="button"
+      >Update now</button>
+
+      <button
+        id="archives-update-later"
+        class="update-later"
+        type="button"
+      >Later</button>
+    </div>
+  </div>
+
+  <!--
+    Update checker.
+    This script runs before main.js is loaded.
+    It remembers the HTML that is actually displayed,
+    rather than treating the newest server response
+    as the currently installed version.
+  -->
+
+  <script>
+  (() => {
+    'use strict';
+
+    const CHECK_INTERVAL = 2 * 60 * 1000;
+    const base = new URL('./', document.baseURI);
+
+    const banner = document.getElementById(
+      'archives-update-banner'
+    );
+
+    const updateButton = document.getElementById(
+      'archives-update-now'
+    );
+
+    const laterButton = document.getElementById(
+      'archives-update-later'
+    );
+
+    // Capture the HTML before the soundboard
+    // dynamically generates its buttons.
+    const loadedHTML = document.documentElement.outerHTML;
+
+    let loadedMainVersion = null;
+    let checking = false;
+    let updateFound = false;
+    let dismissed = false;
+
+    function fingerprint(text) {
+      let hash = 2166136261;
+
+      for (let i = 0; i < text.length; i++) {
+        hash ^= text.charCodeAt(i);
+        hash = Math.imul(hash, 16777619);
+      }
+
+      return (hash >>> 0).toString(16);
+    }
+
+    function htmlVersion(source) {
+      const parsed = new DOMParser().parseFromString(
+        source,
+        'text/html'
+      );
+
+      // Normalize through the browser's HTML parser.
+      return fingerprint(
+        parsed.documentElement.outerHTML
+      );
+    }
+
+    const currentHTMLVersion = htmlVersion(loadedHTML);
+
+    async function fetchFreshFile(filename) {
+      const url = new URL(filename, base);
+
+      url.searchParams.set(
+        '_archives_check',
+        Date.now().toString()
+      );
+
+      const response = await fetch(url.href, {
+        cache: 'no-store'
+      });
+
+      if (!response.ok) {
+        throw new Error(
+          `Unable to check ${filename}: ${response.status}`
+        );
+      }
+
+      return response.text();
+    }
+
+    function showUpdate() {
+      if (dismissed || updateFound) return;
+
+      updateFound = true;
+      banner.classList.add('show');
+    }
+
+    async function checkForUpdates() {
+      if (
+        checking ||
+        updateFound ||
+        dismissed ||
+        !navigator.onLine
+      ) {
+        return;
+      }
+
+      checking = true;
+
+      try {
+        const [newHTML, newMain] = await Promise.all([
+          fetchFreshFile('index.html'),
+          fetchFreshFile('main.js')
+        ]);
+
+        const newHTMLVersion = htmlVersion(newHTML);
+        const newMainVersion = fingerprint(newMain);
+
+        // If the loaded webpage is older than the
+        // published webpage, show the update immediately.
+        if (newHTMLVersion !== currentHTMLVersion) {
+          showUpdate();
+          return;
+        }
+
+        // For main.js, the baseline is captured when
+        // its fresh source is fetched and executed below.
+        if (
+          loadedMainVersion !== null &&
+          newMainVersion !== loadedMainVersion
+        ) {
+          showUpdate();
+        }
+      } catch (error) {
+        console.warn(
+          'The Archives update check failed:',
+          error
+        );
+      } finally {
+        checking = false;
+      }
+    }
+
+    updateButton.addEventListener('click', () => {
+      updateButton.disabled = true;
+      updateButton.textContent = 'Updating...';
+
+      // Fresh URL for the HTML document.
+      // The next page load also fetches fresh main.js.
+      const url = new URL(location.href);
+
+      url.searchParams.set(
+        '_archives_refresh',
+        Date.now().toString()
+      );
+
+      location.replace(url.href);
+    });
+
+    laterButton.addEventListener('click', () => {
+      dismissed = true;
+      banner.classList.remove('show');
+    });
+
+    // Fetch the current JavaScript without relying on
+    // an old browser HTTP-cache entry, then execute
+    // that exact version and remember its fingerprint.
+    async function loadSoundboard() {
+      try {
+        const source = await fetchFreshFile('main.js');
+        loadedMainVersion = fingerprint(source);
+
+        const blob = new Blob(
+          [source],
+          { type: 'text/javascript' }
+        );
+
+        const scriptURL = URL.createObjectURL(blob);
+        const script = document.createElement('script');
+
+        script.src = scriptURL;
+
+        script.addEventListener('load', () => {
+          URL.revokeObjectURL(scriptURL);
+          checkForUpdates();
+        }, { once: true });
+
+        script.addEventListener('error', () => {
+          URL.revokeObjectURL(scriptURL);
+          console.error('Unable to start The Archives.');
+        }, { once: true });
+
+        document.body.appendChild(script);
+
+      } catch (error) {
+        console.error(
+          'The Archives failed to load main.js:',
+          error
+        );
+
+        const container = document.getElementById(
+          'sounds-container'
+        );
+
+        if (container) {
+          container.textContent =
+            'Unable to load sounds. Check your connection and reload.';
+        }
+      }
+    }
+
+    // Start playback application.
+    loadSoundboard();
+
+    // Continue checking while the page is open.
+    setInterval(checkForUpdates, CHECK_INTERVAL);
+
+    document.addEventListener(
+      'visibilitychange',
+      () => {
+        if (!document.hidden) {
+          checkForUpdates();
+        }
+      }
+    );
+
+    window.addEventListener(
+      'online',
+      checkForUpdates
+    );
+
+  })();
+  </script>
+
 </body>
 </html>
