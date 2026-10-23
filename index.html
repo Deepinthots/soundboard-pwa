@@ -5,7 +5,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#080a09">
-  <meta name="description" content="The Archives — A study of Man">
+  <meta name="description" content="The Archives">
   <title>The Archives</title>
   <link rel="icon" href="./public/favicon.svg">
   <style>
@@ -69,7 +69,6 @@
       font: inherit;
       font-size: 0.9rem;
       outline: none;
-      transition: border-color .15s, box-shadow .15s;
     }
 
     .search-input::placeholder { color: var(--muted); }
@@ -83,6 +82,87 @@
       margin: 9px 0 0;
       color: var(--muted);
       font-size: 0.75rem;
+    }
+
+    /* Pitch controls */
+    .pitch-panel {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 9px;
+      padding: 14px 16px;
+      margin: 16px 0 0;
+    }
+
+    .pitch-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 14px;
+    }
+
+    .pitch-title {
+      font-size: 0.88rem;
+      font-weight: 600;
+    }
+
+    .pitch-title::before {
+      content: "♫";
+      color: var(--accent-light);
+      margin-right: 9px;
+    }
+
+    .pitch-actions {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .pitch-value {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text);
+      min-width: 52px;
+      text-align: right;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .pitch-reset {
+      background: #1c2420;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      color: var(--text);
+      padding: 7px 13px;
+      font: inherit;
+      font-size: 0.77rem;
+      cursor: pointer;
+    }
+
+    .pitch-reset:hover {
+      background: var(--panel-hover);
+      border-color: var(--accent-light);
+    }
+
+    .pitch-reset:focus-visible {
+      outline: 2px solid var(--accent-light);
+      outline-offset: 2px;
+    }
+
+    .pitch-slider {
+      display: block;
+      width: 100%;
+      margin: 0;
+      accent-color: var(--accent-light);
+      cursor: pointer;
+    }
+
+    .pitch-labels {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: 0.72rem;
     }
 
     .sounds-container {
@@ -232,6 +312,8 @@
       }
 
       .sound-name { font-size: 0.82rem; }
+      .pitch-panel { padding: 12px; }
+      .pitch-labels { font-size: 0.63rem; }
       .footer { padding: 16px 10px; }
     }
 
@@ -240,7 +322,7 @@
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .search-input, .sound-button { transition: none; }
+      .sound-button { transition: none; }
     }
   </style>
 </head>
@@ -263,7 +345,37 @@
         aria-label="Search sounds"
         autocomplete="off"
       >
-      <p class="tip">Click any sound to play, enjoy</p>
+      <p class="tip">Click any sound to play</p>
+
+      <div class="pitch-panel">
+        <div class="pitch-header">
+          <label class="pitch-title" for="pitch-slider">
+            Pitch
+          </label>
+          <div class="pitch-actions">
+            <output id="pitch-value" class="pitch-value"
+                    for="pitch-slider">1.00×</output>
+            <button id="pitch-reset"
+                    class="pitch-reset"
+                    type="button">Reset</button>
+          </div>
+        </div>
+        <input
+          type="range"
+          id="pitch-slider"
+          class="pitch-slider"
+          min="0.65"
+          max="1.50"
+          step="0.05"
+          value="1.00"
+          aria-label="Pitch and playback speed"
+        >
+        <div class="pitch-labels">
+          <span>Deep / Slow</span>
+          <span>Normal</span>
+          <span>High / Fast</span>
+        </div>
+      </div>
     </section>
 
     <section
@@ -278,21 +390,20 @@
   <footer class="footer">
     <div class="footer-content">The Archives</div>
     <nav aria-label="Links">
-      <a
-        class="footer-link"
-        href="https://github.com/Deepinthots/soundboard-pwa"
-        target="_blank"
-        rel="noopener noreferrer"
-      >GitHub</a>
+      <a class="footer-link"
+         href="https://github.com/Deepinthots/soundboard-pwa"
+         target="_blank"
+         rel="noopener noreferrer">GitHub</a>
     </nav>
   </footer>
 
-  <div id="status" class="status" role="status" aria-live="polite"></div>
+  <div id="status" class="status"
+       role="status" aria-live="polite"></div>
 
   <div id="offline-indicator" class="offline-indicator">
     Offline — sounds require a connection
   </div>
 
-  <script src="./main.js?v=20261022-fix1" defer></script>
+  <script src="./main.js?v=20261022-pitch1" defer></script>
 </body>
 </html>
