@@ -2,818 +2,779 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#080a09">
-  <meta name="description" content="The Archives">
-  <title>The Archives</title>
-  <link rel="icon" href="./public/favicon.svg">
-
-  <style>
-    :root {
-      --bg: #080a09;
-      --panel: #111413;
-      --panel-hover: #19251f;
-      --panel-active: #1b3026;
-      --accent: #2d6a5b;
-      --accent-light: #5e9c87;
-      --text: #f3f5f4;
-      --muted: #8f9a95;
-      --border: #232927;
-      --danger: #d48686;
-    }
-
-    * {
-      box-sizing: border-box;
-    }
-
-    body {
-      margin: 0;
-      min-height: 100vh;
-      background: var(--bg);
-      color: var(--text);
-      font-family: Inter, "Segoe UI", Arial, sans-serif;
-      -webkit-font-smoothing: antialiased;
-    }
-
-    main {
-      width: 100%;
-      max-width: 1600px;
-      margin: 0 auto;
-      padding: 28px 12px 40px;
-      min-height: calc(100vh - 70px);
-    }
-
-    .header {
-      margin-bottom: 22px;
-    }
-
-    h1 {
-      margin: 0 0 5px;
-      font-size: clamp(1.65rem, 3vw, 2.2rem);
-      font-weight: 650;
-      letter-spacing: -0.7px;
-      line-height: 1.25;
-    }
-
-    .subtitle {
-      margin: 0;
-      color: var(--muted);
-      font-size: 0.85rem;
-    }
-
-    .controls {
-      margin-bottom: 16px;
-    }
-
-    .search-input {
-      width: 100%;
-      padding: 12px 14px;
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      background: var(--panel);
-      color: var(--text);
-      font: inherit;
-      font-size: 0.9rem;
-      outline: none;
-    }
-
-    .search-input::placeholder {
-      color: var(--muted);
-    }
-
-    .search-input:focus {
-      border-color: var(--accent-light);
-      box-shadow: 0 0 0 3px rgba(94,156,135,.12);
-    }
-
-    .tip {
-      margin: 9px 0 0;
-      color: var(--muted);
-      font-size: 0.75rem;
-    }
-
-    /* Pitch controls */
-
-    .pitch-panel {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      padding: 14px 16px;
-      margin: 16px 0 0;
-    }
-
-    .pitch-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 14px;
-      margin-bottom: 14px;
-    }
-
-    .pitch-title {
-      font-size: 0.88rem;
-      font-weight: 600;
-    }
-
-    .pitch-title::before {
-      content: "♫";
-      color: var(--accent-light);
-      margin-right: 9px;
-    }
-
-    .pitch-actions {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .pitch-value {
-      font-size: 0.9rem;
-      font-weight: 600;
-      color: var(--text);
-      min-width: 52px;
-      text-align: right;
-      font-variant-numeric: tabular-nums;
-    }
-
-    .pitch-reset {
-      background: #1c2420;
-      border: 1px solid var(--border);
-      border-radius: 7px;
-      color: var(--text);
-      padding: 7px 13px;
-      font: inherit;
-      font-size: 0.77rem;
-      cursor: pointer;
-    }
-
-    .pitch-reset:hover {
-      background: var(--panel-hover);
-      border-color: var(--accent-light);
-    }
-
-    .pitch-reset:focus-visible {
-      outline: 2px solid var(--accent-light);
-      outline-offset: 2px;
-    }
-
-    .pitch-slider {
-      display: block;
-      width: 100%;
-      margin: 0;
-      accent-color: var(--accent-light);
-      cursor: pointer;
-    }
-
-    .pitch-labels {
-      display: flex;
-      justify-content: space-between;
-      gap: 8px;
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: 0.72rem;
-    }
-
-    /* Sound buttons */
-
-    .sounds-container {
-      display: grid;
-      grid-template-columns:
-        repeat(auto-fill, minmax(min(190px, 100%), 1fr));
-      gap: 8px;
-    }
-
-    .sound-button {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      gap: 8px;
-      width: 100%;
-      min-height: 72px;
-      padding: 12px 35px 12px 12px;
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: 9px;
-      color: var(--text);
-      text-align: left;
-      font: inherit;
-      cursor: pointer;
-      transition:
-        background .15s,
-        border-color .15s,
-        box-shadow .15s,
-        transform .15s;
-    }
-
-    .sound-button:hover {
-      background: var(--panel-hover);
-      border-color: #3e8065;
-      box-shadow: 0 0 0 1px rgba(45,106,91,.15);
-      transform: translateY(-1px);
-    }
-
-    .sound-button:active {
-      background: var(--panel-active);
-      border-color: var(--accent-light);
-      transform: translateY(0);
-    }
-
-    .sound-button:focus-visible {
-      outline: 2px solid var(--accent-light);
-      outline-offset: 2px;
-    }
-
-    .sound-button::after {
-      content: "▶";
-      position: absolute;
-      right: 12px;
-      bottom: 12px;
-      color: var(--accent-light);
-      font-size: 12px;
-    }
-
-    .sound-name {
-      font-size: 0.88rem;
-      font-weight: 550;
-      line-height: 1.3;
-      overflow-wrap: anywhere;
-    }
-
-    .sound-artist {
-      color: var(--muted);
-      font-size: 0.71rem;
-    }
-
-    .loading {
-      grid-column: 1 / -1;
-      padding: 40px 12px;
-      color: var(--muted);
-      text-align: center;
-    }
-
-    /* Error and offline messages */
-
-    .status {
-      position: fixed;
-      top: 16px;
-      right: 16px;
-      z-index: 100;
-      max-width: min(400px, calc(100vw - 32px));
-      padding: 14px 16px;
-      border: 1px solid var(--danger);
-      border-radius: 9px;
-      background: var(--panel);
-      color: var(--text);
-      box-shadow: 0 8px 28px rgba(0,0,0,.35);
-      opacity: 0;
-      pointer-events: none;
-      overflow-wrap: anywhere;
-    }
-
-    .status.show {
-      opacity: 1;
-    }
-
-    .status.success {
-      border-color: var(--accent-light);
-    }
-
-    .offline-indicator {
-      display: none;
-      position: fixed;
-      bottom: 16px;
-      left: 16px;
-      z-index: 100;
-      padding: 10px 14px;
-      background: var(--panel);
-      border: 1px solid var(--danger);
-      border-radius: 9px;
-      font-size: 0.8rem;
-    }
-
-    .offline-indicator.show {
-      display: block;
-    }
-
-    /* Update notification */
-
-    .update-banner {
-      display: none;
-      position: fixed;
-      right: 18px;
-      bottom: 18px;
-      z-index: 9999;
-      width: min(350px, calc(100vw - 36px));
-      background: var(--panel);
-      border: 1px solid var(--accent);
-      border-radius: 11px;
-      padding: 18px;
-      box-shadow: 0 10px 35px rgba(0,0,0,.55);
-    }
-
-    .update-banner.show {
-      display: block;
-    }
-
-    .update-heading {
-      margin: 0 0 8px;
-      color: var(--text);
-      font-size: 0.95rem;
-      font-weight: 650;
-    }
-
-    .update-description {
-      color: var(--muted);
-      font-size: 0.82rem;
-      line-height: 1.5;
-      margin: 0 0 16px;
-    }
-
-    .update-actions {
-      display: flex;
-      gap: 9px;
-    }
-
-    .update-button {
-      background: var(--accent);
-      border: 1px solid var(--accent);
-      border-radius: 7px;
-      color: white;
-      padding: 9px 15px;
-      font: inherit;
-      font-size: 0.8rem;
-      font-weight: 600;
-      cursor: pointer;
-    }
-
-    .update-button:hover {
-      background: #397d6a;
-    }
-
-    .update-button:disabled {
-      opacity: .6;
-      cursor: wait;
-    }
-
-    .update-later {
-      background: #242a27;
-      border: 1px solid var(--border);
-      border-radius: 7px;
-      color: var(--text);
-      padding: 9px 15px;
-      font: inherit;
-      font-size: 0.8rem;
-      cursor: pointer;
-    }
-
-    .update-later:hover {
-      background: var(--panel-hover);
-    }
-
-    .update-button:focus-visible,
-    .update-later:focus-visible {
-      outline: 2px solid var(--accent-light);
-      outline-offset: 2px;
-    }
-
-    /* Footer */
-
-    .footer {
-      max-width: 1600px;
-      margin: 0 auto;
-      padding: 18px 12px;
-      border-top: 1px solid var(--border);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .footer-content {
-      color: var(--muted);
-      font-size: 0.78rem;
-    }
-
-    .footer-link {
-      color: var(--accent-light);
-      text-decoration: none;
-      font-size: 0.8rem;
-    }
-
-    .footer-link:hover {
-      text-decoration: underline;
-    }
-
-    /* Mobile layout */
-
-    @media (max-width: 600px) {
-      main {
-        padding: 22px 10px 32px;
-      }
-
-      .sounds-container {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 8px;
-      }
-
-      .sound-button {
-        min-height: 76px;
-        padding: 11px 26px 11px 10px;
-      }
-
-      .sound-name {
-        font-size: 0.82rem;
-      }
-
-      .pitch-panel {
-        padding: 12px;
-      }
-
-      .pitch-labels {
-        font-size: 0.63rem;
-      }
-
-      .footer {
-        padding: 16px 10px;
-      }
-    }
-
-    @media (max-width: 350px) {
-      .sounds-container {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (prefers-reduced-motion: reduce) {
-      .sound-button {
-        transition: none;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#080a09">
+<meta name="description" content="The Archives soundboard">
+<title>The Archives</title>
+<link rel="icon" href="./public/favicon.svg">
+
+<style>
+:root {
+  --bg: #080a09;
+  --panel: #111413;
+  --hover: #19251f;
+  --active: #1b3026;
+  --accent: #2d6a5b;
+  --accent-light: #5e9c87;
+  --text: #f3f5f4;
+  --muted: #8f9a95;
+  --border: #232927;
+  --danger: #d48686;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  background: var(--bg);
+  color: var(--text);
+  font-family: Inter, "Segoe UI", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+main {
+  width: 100%;
+  max-width: 1600px;
+  margin: auto;
+  padding: 28px 12px 40px;
+  min-height: calc(100vh - 70px);
+}
+
+.header {
+  margin-bottom: 22px;
+}
+
+h1 {
+  margin: 0 0 5px;
+  font-size: clamp(1.65rem, 3vw, 2.2rem);
+  font-weight: 650;
+  letter-spacing: -0.7px;
+  line-height: 1.25;
+}
+
+.subtitle {
+  margin: 0;
+  color: var(--muted);
+  font-size: .85rem;
+}
+
+.controls {
+  margin-bottom: 16px;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  background: var(--panel);
+  color: var(--text);
+  font: inherit;
+  font-size: .9rem;
+  outline: none;
+}
+
+.search-input::placeholder {
+  color: var(--muted);
+}
+
+.search-input:focus {
+  border-color: var(--accent-light);
+  box-shadow: 0 0 0 3px rgba(94,156,135,.12);
+}
+
+.tip {
+  margin: 9px 0 0;
+  color: var(--muted);
+  font-size: .75rem;
+}
+
+/* Pitch controls */
+
+.pitch-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 14px 16px;
+  margin: 16px 0 0;
+}
+
+.pitch-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 14px;
+}
+
+.pitch-title {
+  font-size: .88rem;
+  font-weight: 600;
+}
+
+.pitch-title::before {
+  content: "♫";
+  color: var(--accent-light);
+  margin-right: 9px;
+}
+
+.pitch-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.pitch-value {
+  font-size: .9rem;
+  font-weight: 600;
+  min-width: 52px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.pitch-reset,
+.update-later {
+  background: #1c2420;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  color: var(--text);
+  padding: 7px 13px;
+  font: inherit;
+  font-size: .8rem;
+  cursor: pointer;
+}
+
+.pitch-reset:hover,
+.update-later:hover {
+  background: var(--hover);
+  border-color: var(--accent-light);
+}
+
+.pitch-slider {
+  display: block;
+  width: 100%;
+  margin: 0;
+  accent-color: var(--accent-light);
+  cursor: pointer;
+}
+
+.pitch-labels {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 10px;
+  color: var(--muted);
+  font-size: .72rem;
+}
+
+/* Sound buttons */
+
+.sounds-container {
+  display: grid;
+  grid-template-columns:
+    repeat(auto-fill, minmax(min(190px, 100%), 1fr));
+  gap: 8px;
+}
+
+.sound-button {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 8px;
+  width: 100%;
+  min-height: 72px;
+  padding: 12px 35px 12px 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  color: var(--text);
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+  transition:
+    background .15s,
+    border-color .15s,
+    box-shadow .15s,
+    transform .15s;
+}
+
+.sound-button:hover {
+  background: var(--hover);
+  border-color: #3e8065;
+  box-shadow: 0 0 0 1px rgba(45,106,91,.15);
+  transform: translateY(-1px);
+}
+
+.sound-button:active {
+  background: var(--active);
+  border-color: var(--accent-light);
+  transform: translateY(0);
+}
+
+.sound-button:focus-visible,
+.pitch-reset:focus-visible,
+.update-now:focus-visible,
+.update-later:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
+}
+
+.sound-button::after {
+  content: "▶";
+  position: absolute;
+  right: 12px;
+  bottom: 12px;
+  color: var(--accent-light);
+  font-size: 12px;
+}
+
+.sound-name {
+  font-size: .88rem;
+  font-weight: 550;
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+
+.sound-artist {
+  color: var(--muted);
+  font-size: .71rem;
+}
+
+.loading {
+  grid-column: 1 / -1;
+  padding: 40px 12px;
+  color: var(--muted);
+  text-align: center;
+}
+
+/* Status and offline messages */
+
+.status {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 100;
+  max-width: min(400px, calc(100vw - 32px));
+  padding: 14px 16px;
+  border: 1px solid var(--danger);
+  border-radius: 9px;
+  background: var(--panel);
+  color: var(--text);
+  box-shadow: 0 8px 28px rgba(0,0,0,.35);
+  opacity: 0;
+  pointer-events: none;
+  overflow-wrap: anywhere;
+}
+
+.status.show {
+  opacity: 1;
+}
+
+.status.success {
+  border-color: var(--accent-light);
+}
+
+.offline-indicator {
+  display: none;
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  z-index: 100;
+  padding: 10px 14px;
+  background: var(--panel);
+  border: 1px solid var(--danger);
+  border-radius: 9px;
+  font-size: .8rem;
+}
+
+.offline-indicator.show {
+  display: block;
+}
+
+/* Update notification */
+
+.update-banner {
+  display: none;
+  position: fixed;
+  bottom: 18px;
+  right: 18px;
+  z-index: 9999;
+  width: min(350px, calc(100vw - 36px));
+  padding: 18px;
+  border: 1px solid var(--accent);
+  border-radius: 11px;
+  background: var(--panel);
+  box-shadow: 0 10px 35px rgba(0,0,0,.55);
+}
+
+.update-banner.show {
+  display: block;
+}
+
+.update-heading {
+  margin: 0 0 8px;
+  font-size: .95rem;
+  font-weight: 650;
+}
+
+.update-description {
+  margin: 0 0 16px;
+  color: var(--muted);
+  font-size: .82rem;
+  line-height: 1.5;
+}
+
+.update-actions {
+  display: flex;
+  gap: 9px;
+}
+
+.update-now {
+  background: var(--accent);
+  border: 1px solid var(--accent);
+  border-radius: 7px;
+  padding: 9px 15px;
+  font: inherit;
+  font-size: .8rem;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+}
+
+.update-now:hover {
+  background: #397d6a;
+}
+
+.update-now:disabled {
+  opacity: .6;
+  cursor: wait;
+}
+
+/* Footer */
+
+.footer {
+  max-width: 1600px;
+  margin: 0 auto;
+  padding: 18px 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-content {
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+.footer-link {
+  color: var(--accent-light);
+  text-decoration: none;
+  font-size: .8rem;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}
+
+/* Mobile layout */
+
+@media (max-width: 600px) {
+  main {
+    padding: 22px 10px 32px;
+  }
+
+  .sounds-container {
+    grid-template-columns:
+      repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .sound-button {
+    min-height: 76px;
+    padding: 11px 26px 11px 10px;
+  }
+
+  .sound-name {
+    font-size: .82rem;
+  }
+
+  .pitch-panel {
+    padding: 12px;
+  }
+
+  .pitch-labels {
+    font-size: .63rem;
+  }
+
+  .footer {
+    padding: 16px 10px;
+  }
+}
+
+@media (max-width: 350px) {
+  .sounds-container {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sound-button {
+    transition: none;
+  }
+}
+</style>
 </head>
 
 <body>
-  <main>
 
-    <header class="header">
-      <h1>The Archives</h1>
-      <p class="subtitle">
-        <span id="sound-count">0</span> sounds available
-      </p>
-    </header>
+<main>
 
-    <section class="controls" aria-label="Soundboard controls">
+  <header class="header">
+    <h1>The Archives</h1>
+    <p class="subtitle">
+      <span id="sound-count">0</span> sounds available
+    </p>
+  </header>
+
+  <section class="controls"
+           aria-label="Soundboard controls">
+
+    <input
+      id="search-input"
+      class="search-input"
+      type="search"
+      placeholder="Search sounds..."
+      aria-label="Search sounds"
+      autocomplete="off"
+    >
+
+    <p class="tip">Click any sound to play</p>
+
+    <div class="pitch-panel">
+
+      <div class="pitch-header">
+
+        <label class="pitch-title"
+               for="pitch-slider">
+          Pitch
+        </label>
+
+        <div class="pitch-actions">
+
+          <output
+            id="pitch-value"
+            class="pitch-value"
+            for="pitch-slider"
+          >1.00×</output>
+
+          <button
+            id="pitch-reset"
+            class="pitch-reset"
+            type="button"
+          >Reset</button>
+
+        </div>
+      </div>
 
       <input
-        id="search-input"
-        class="search-input"
-        type="search"
-        placeholder="Search sounds..."
-        aria-label="Search sounds"
-        autocomplete="off"
+        type="range"
+        id="pitch-slider"
+        class="pitch-slider"
+        min="-100"
+        max="100"
+        step="1"
+        value="0"
+        aria-label="Pitch and playback speed"
       >
 
-      <p class="tip">Click any sound to play</p>
-
-      <div class="pitch-panel">
-
-        <div class="pitch-header">
-          <label class="pitch-title" for="pitch-slider">
-            Pitch
-          </label>
-
-          <div class="pitch-actions">
-            <output
-              id="pitch-value"
-              class="pitch-value"
-              for="pitch-slider"
-            >1.00×</output>
-
-            <button
-              id="pitch-reset"
-              class="pitch-reset"
-              type="button"
-            >Reset</button>
-          </div>
-        </div>
-
-        <input
-          type="range"
-          id="pitch-slider"
-          class="pitch-slider"
-          min="-100"
-          max="100"
-          step="1"
-          value="0"
-          aria-label="Pitch and playback speed"
-        >
-
-        <div class="pitch-labels">
-          <span>0.50× Deep / Slow</span>
-          <span>1.00× Normal</span>
-          <span>3.00× High / Fast</span>
-        </div>
-
+      <div class="pitch-labels">
+        <span>0.50× Deep / Slow</span>
+        <span>1.00× Normal</span>
+        <span>3.00× High / Fast</span>
       </div>
-    </section>
 
-    <section
-      id="sounds-container"
-      class="sounds-container"
-      aria-label="Sound clips"
-    >
-      <div class="loading">Loading sounds...</div>
-    </section>
-
-  </main>
-
-  <footer class="footer">
-    <div class="footer-content">The Archives</div>
-
-    <nav aria-label="Links">
-      <a
-        class="footer-link"
-        href="https://github.com/Deepinthots/soundboard-pwa"
-        target="_blank"
-        rel="noopener noreferrer"
-      >GitHub</a>
-    </nav>
-  </footer>
-
-  <div
-    id="status"
-    class="status"
-    role="status"
-    aria-live="polite"
-  ></div>
-
-  <div
-    id="offline-indicator"
-    class="offline-indicator"
-  >
-    Offline — sounds require a connection
-  </div>
-
-  <!-- Update notification -->
-
-  <div
-    id="archives-update-banner"
-    class="update-banner"
-    role="status"
-    aria-live="polite"
-  >
-    <h2 class="update-heading">
-      Update Available
-    </h2>
-
-    <p class="update-description">
-      A newer version of The Archives is available.
-      Update to get the latest changes.
-    </p>
-
-    <div class="update-actions">
-      <button
-        id="archives-update-now"
-        class="update-button"
-        type="button"
-      >Update now</button>
-
-      <button
-        id="archives-update-later"
-        class="update-later"
-        type="button"
-      >Later</button>
     </div>
+
+  </section>
+
+  <section
+    id="sounds-container"
+    class="sounds-container"
+    aria-label="Sound clips"
+  >
+    <div class="loading">Loading sounds...</div>
+  </section>
+
+</main>
+
+<footer class="footer">
+
+  <div class="footer-content">
+    The Archives
   </div>
 
-  <!--
-    Update checker.
-    This script runs before main.js is loaded.
-    It remembers the HTML that is actually displayed,
-    rather than treating the newest server response
-    as the currently installed version.
-  -->
+  <nav aria-label="Links">
+    <a
+      class="footer-link"
+      href="https://github.com/Deepinthots/soundboard-pwa"
+      target="_blank"
+      rel="noopener noreferrer"
+    >GitHub</a>
+  </nav>
 
-  <script>
-  (() => {
-    'use strict';
+</footer>
 
-    const CHECK_INTERVAL = 2 * 60 * 1000;
-    const base = new URL('./', document.baseURI);
+<div
+  id="status"
+  class="status"
+  role="status"
+  aria-live="polite"
+></div>
 
-    const banner = document.getElementById(
-      'archives-update-banner'
+<div
+  id="offline-indicator"
+  class="offline-indicator"
+>
+  Offline — sounds require a connection
+</div>
+
+<!-- Update notification -->
+
+<div
+  id="archives-update-banner"
+  class="update-banner"
+  role="status"
+  aria-live="polite"
+>
+
+  <h2 class="update-heading">
+    Update available
+  </h2>
+
+  <p class="update-description">
+    A newer version of The Archives is ready.
+  </p>
+
+  <div class="update-actions">
+
+    <button
+      id="archives-update-now"
+      class="update-now"
+      type="button"
+    >
+      Update now
+    </button>
+
+    <button
+      id="archives-update-later"
+      class="update-later"
+      type="button"
+    >
+      Later
+    </button>
+
+  </div>
+
+</div>
+
+<!-- Automatic update checker and soundboard loader -->
+
+<script>
+(() => {
+  'use strict';
+
+  const INTERVAL = 2 * 60 * 1000;
+
+  const base = new URL('./', document.baseURI);
+
+  const banner = document.getElementById(
+    'archives-update-banner'
+  );
+
+  const updateNow = document.getElementById(
+    'archives-update-now'
+  );
+
+  const later = document.getElementById(
+    'archives-update-later'
+  );
+
+  let baseline = null;
+  let checking = false;
+  let pendingVersion = null;
+  let dismissedVersion = null;
+
+  // Create a fingerprint for the published files.
+  function hash(text) {
+    let value = 2166136261;
+
+    for (let i = 0; i < text.length; i++) {
+      value ^= text.charCodeAt(i);
+      value = Math.imul(value, 16777619);
+    }
+
+    return (value >>> 0).toString(16);
+  }
+
+  // Fetch files while bypassing ordinary HTTP caching.
+  async function fetchFresh(filename) {
+    const url = new URL(filename, base);
+
+    url.searchParams.set(
+      '_archives_check',
+      String(Date.now())
     );
 
-    const updateButton = document.getElementById(
-      'archives-update-now'
+    const response = await fetch(url.href, {
+      cache: 'no-store'
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        filename + ': HTTP ' + response.status
+      );
+    }
+
+    return response.text();
+  }
+
+  // Compare index.html and main.js together.
+  async function getVersion() {
+    const [html, js] = await Promise.all([
+      fetchFresh('index.html'),
+      fetchFresh('main.js')
+    ]);
+
+    return hash(
+      html + '\n--ARCHIVES-MAIN--\n' + js
     );
+  }
 
-    const laterButton = document.getElementById(
-      'archives-update-later'
-    );
+  function hideNotice() {
+    banner.classList.remove('show');
+  }
 
-    // Capture the HTML before the soundboard
-    // dynamically generates its buttons.
-    const loadedHTML = document.documentElement.outerHTML;
-
-    let loadedMainVersion = null;
-    let checking = false;
-    let updateFound = false;
-    let dismissed = false;
-
-    function fingerprint(text) {
-      let hash = 2166136261;
-
-      for (let i = 0; i < text.length; i++) {
-        hash ^= text.charCodeAt(i);
-        hash = Math.imul(hash, 16777619);
-      }
-
-      return (hash >>> 0).toString(16);
+  // Check for published updates.
+  async function checkForUpdates() {
+    if (checking || !navigator.onLine) {
+      return;
     }
 
-    function htmlVersion(source) {
-      const parsed = new DOMParser().parseFromString(
-        source,
-        'text/html'
-      );
+    checking = true;
 
-      // Normalize through the browser's HTML parser.
-      return fingerprint(
-        parsed.documentElement.outerHTML
-      );
-    }
+    try {
+      const version = await getVersion();
 
-    const currentHTMLVersion = htmlVersion(loadedHTML);
-
-    async function fetchFreshFile(filename) {
-      const url = new URL(filename, base);
-
-      url.searchParams.set(
-        '_archives_check',
-        Date.now().toString()
-      );
-
-      const response = await fetch(url.href, {
-        cache: 'no-store'
-      });
-
-      if (!response.ok) {
-        throw new Error(
-          `Unable to check ${filename}: ${response.status}`
-        );
-      }
-
-      return response.text();
-    }
-
-    function showUpdate() {
-      if (dismissed || updateFound) return;
-
-      updateFound = true;
-      banner.classList.add('show');
-    }
-
-    async function checkForUpdates() {
-      if (
-        checking ||
-        updateFound ||
-        dismissed ||
-        !navigator.onLine
-      ) {
+      // The first successful check establishes
+      // the current published version.
+      if (baseline === null) {
+        baseline = version;
         return;
       }
 
-      checking = true;
+      if (version === baseline) {
+        pendingVersion = null;
+        hideNotice();
 
-      try {
-        const [newHTML, newMain] = await Promise.all([
-          fetchFreshFile('index.html'),
-          fetchFreshFile('main.js')
-        ]);
-
-        const newHTMLVersion = htmlVersion(newHTML);
-        const newMainVersion = fingerprint(newMain);
-
-        // If the loaded webpage is older than the
-        // published webpage, show the update immediately.
-        if (newHTMLVersion !== currentHTMLVersion) {
-          showUpdate();
-          return;
-        }
-
-        // For main.js, the baseline is captured when
-        // its fresh source is fetched and executed below.
-        if (
-          loadedMainVersion !== null &&
-          newMainVersion !== loadedMainVersion
-        ) {
-          showUpdate();
-        }
-      } catch (error) {
-        console.warn(
-          'The Archives update check failed:',
-          error
-        );
-      } finally {
-        checking = false;
+      } else if (version !== dismissedVersion) {
+        pendingVersion = version;
+        banner.classList.add('show');
       }
-    }
 
-    updateButton.addEventListener('click', () => {
-      updateButton.disabled = true;
-      updateButton.textContent = 'Updating...';
-
-      // Fresh URL for the HTML document.
-      // The next page load also fetches fresh main.js.
-      const url = new URL(location.href);
-
-      url.searchParams.set(
-        '_archives_refresh',
-        Date.now().toString()
+    } catch (err) {
+      console.warn(
+        'Update check unavailable:',
+        err
       );
 
-      location.replace(url.href);
-    });
+    } finally {
+      checking = false;
+    }
+  }
 
-    laterButton.addEventListener('click', () => {
-      dismissed = true;
-      banner.classList.remove('show');
-    });
+  // Update button.
+  updateNow.addEventListener('click', () => {
+    updateNow.disabled = true;
+    updateNow.textContent = 'Updating...';
 
-    // Fetch the current JavaScript without relying on
-    // an old browser HTTP-cache entry, then execute
-    // that exact version and remember its fingerprint.
-    async function loadSoundboard() {
-      try {
-        const source = await fetchFreshFile('main.js');
-        loadedMainVersion = fingerprint(source);
+    // Close the notification immediately.
+    hideNotice();
 
-        const blob = new Blob(
-          [source],
-          { type: 'text/javascript' }
-        );
+    // Request a fresh HTML document.
+    const url = new URL(location.href);
 
-        const scriptURL = URL.createObjectURL(blob);
-        const script = document.createElement('script');
+    url.searchParams.set(
+      '_archives_refresh',
+      String(Date.now())
+    );
 
-        script.src = scriptURL;
+    location.replace(url.href);
+  });
 
-        script.addEventListener('load', () => {
-          URL.revokeObjectURL(scriptURL);
-          checkForUpdates();
-        }, { once: true });
+  // Dismiss only the currently detected update.
+  later.addEventListener('click', () => {
+    dismissedVersion = pendingVersion;
+    hideNotice();
+  });
 
-        script.addEventListener('error', () => {
-          URL.revokeObjectURL(scriptURL);
-          console.error('Unable to start The Archives.');
-        }, { once: true });
+  // Load main.js using a fresh URL.
+  const script = document.createElement('script');
 
-        document.body.appendChild(script);
+  const scriptURL = new URL('main.js', base);
 
-      } catch (error) {
-        console.error(
-          'The Archives failed to load main.js:',
-          error
-        );
+  scriptURL.searchParams.set(
+    '_archives_js',
+    String(Date.now())
+  );
 
-        const container = document.getElementById(
-          'sounds-container'
-        );
+  script.src = scriptURL.href;
+  script.async = false;
 
-        if (container) {
-          container.textContent =
-            'Unable to load sounds. Check your connection and reload.';
-        }
+  script.onerror = () => {
+    const container = document.getElementById(
+      'sounds-container'
+    );
+
+    if (container) {
+      container.textContent =
+        'Could not load sounds. Try refreshing.';
+    }
+  };
+
+  document.body.appendChild(script);
+
+  // Start update checks.
+  checkForUpdates();
+
+  // Check every 2 minutes.
+  setInterval(checkForUpdates, INTERVAL);
+
+  // Check when internet connectivity returns.
+  window.addEventListener(
+    'online',
+    checkForUpdates
+  );
+
+  // Check when returning to the browser tab.
+  document.addEventListener(
+    'visibilitychange',
+    () => {
+      if (!document.hidden) {
+        checkForUpdates();
       }
     }
+  );
 
-    // Start playback application.
-    loadSoundboard();
-
-    // Continue checking while the page is open.
-    setInterval(checkForUpdates, CHECK_INTERVAL);
-
-    document.addEventListener(
-      'visibilitychange',
-      () => {
-        if (!document.hidden) {
-          checkForUpdates();
-        }
-      }
-    );
-
-    window.addEventListener(
-      'online',
-      checkForUpdates
-    );
-
-  })();
-  </script>
+})();
+</script>
 
 </body>
 </html>
