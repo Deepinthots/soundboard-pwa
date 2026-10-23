@@ -138,7 +138,7 @@
   }
 
   function init() {
-    document.title = '🔊 Office Soundboard';
+    document.title = '🔊 The Archives';
 
     $('search-input')?.addEventListener('input', render);
 
