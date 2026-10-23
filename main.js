@@ -1,23 +1,49 @@
 
-/* Office Soundboard — static GitHub Pages version, no build step required. */
+/* The Archives — static GitHub Pages soundboard */
 (() => {
   'use strict';
 
   const files = [
-    '5 Farter Death Punch', 'A Question, Billy', 'AH', 'AHHHH',
-    'Billy Fanfare', 'Billy Hum 1', 'Billy Hum 2', 'Billy Hum 3',
-    'Billy Laugh 1', 'Boner1', 'Bully Maguire', 'Defeated Billy',
-    'DIP-PY', 'Downward Fart', 'Dry Mop', 'Goat Ray', 'GOO!',
-    'HHHHHHHHUUUUUOOOO', 'HHHUUUOO', 'Humming Billy Laugh', 'HUO',
-    'Inflected Billy', 'JEW JEW', 'Jurrassic Lomo', 'No but Yes',
-    'Peckham Laugh', 'PENQUITOS', 'PERFECT!', 'Pop Fart',
-    'SarcastiBilly', 'Soft Billy', 'TIIIIOOOTTS',
-    'Usual Suspects Billy', 'Wet Fart', 'Ya (boner!)',
-    'Yes but No', "You're losing it, Billy", 'Yyyyeeaaaaaaah'
+    '5 Farter Death Punch',
+    'A Question, Billy',
+    'AH',
+    'AHHHH',
+    'Billy Fanfare',
+    'Billy Hum 1',
+    'Billy Hum 2',
+    'Billy Hum 3',
+    'Billy Laugh 1',
+    'Boner1',
+    'Bully Maguire',
+    'Defeated Billy',
+    'DIP-PY',
+    'Downward Fart',
+    'Dry Mop',
+    'Goat Ray',
+    'GOO!',
+    'HHHHHHHHUUUUUOOOO',
+    'HHHUUUOO',
+    'Humming Billy Laugh',
+    'HUO',
+    'Inflected Billy',
+    'JEW JEW',
+    'Jurrassic Lomo',
+    'No but Yes',
+    'Peckham Laugh',
+    'PENQUITOS',
+    'PERFECT!',
+    'Pop Fart',
+    'SarcastiBilly',
+    'Soft Billy',
+    'TIIIIOOOTTS',
+    'Usual Suspects Billy',
+    'Wet Fart',
+    'Ya (boner!)',
+    'Yes but No',
+    "You're losing it, Billy",
+    'Yyyyeeaaaaaaah'
   ];
 
-  // Resolve URLs relative to this document.
-  // GitHub Pages publishes /public directly.
   const root = new URL('./', document.baseURI);
 
   const sounds = files.map(name => ({
@@ -32,8 +58,10 @@
   window.OFFICE_SOUNDS = sounds;
 
   const $ = id => document.getElementById(id);
+
   let activeAudio = null;
   let statusTimer;
+  let pitch = 1.0;
 
   function showStatus(message, type = 'error') {
     const el = $('status');
@@ -47,6 +75,48 @@
     statusTimer = setTimeout(() => {
       el.className = 'status';
     }, 5000);
+  }
+
+  function applyPitch(audio) {
+    // Disable automatic pitch correction.
+    // Pitch now rises or falls with playback speed.
+    if ('preservesPitch' in audio) {
+      audio.preservesPitch = false;
+    }
+
+    if ('mozPreservesPitch' in audio) {
+      audio.mozPreservesPitch = false;
+    }
+
+    if ('webkitPreservesPitch' in audio) {
+      audio.webkitPreservesPitch = false;
+    }
+
+    audio.playbackRate = pitch;
+  }
+
+  function setPitch(value) {
+    const parsed = Number(value);
+
+    if (!Number.isFinite(parsed)) return;
+
+    pitch = Math.max(0.65, Math.min(1.5, parsed));
+
+    const slider = $('pitch-slider');
+    const display = $('pitch-value');
+
+    if (slider) {
+      slider.value = pitch.toFixed(2);
+    }
+
+    if (display) {
+      display.textContent = `${pitch.toFixed(2)}×`;
+    }
+
+    // Changes pitch during playback too.
+    if (activeAudio) {
+      applyPitch(activeAudio);
+    }
   }
 
   function render() {
@@ -63,14 +133,15 @@
       sound.name.toLowerCase().includes(query)
     );
 
-    $('sound-count').textContent = String(sounds.length);
+    const count = $('sound-count');
+    if (count) count.textContent = String(sounds.length);
+
     container.replaceChildren();
 
     if (!filtered.length) {
       const empty = document.createElement('div');
       empty.className = 'loading';
-      empty.textContent = '✗ NO SOUNDS FOUND ✗';
-
+      empty.textContent = 'No sounds found';
       container.appendChild(empty);
       return;
     }
@@ -89,8 +160,8 @@
       artist.textContent = sound.artist;
 
       btn.append(name, artist);
-
       btn.addEventListener('click', () => play(sound));
+
       container.appendChild(btn);
     }
   }
@@ -104,6 +175,9 @@
     const audio = new Audio(sound.url);
     activeAudio = audio;
 
+    // Apply the selected pitch before playback.
+    applyPitch(audio);
+
     audio.addEventListener('error', () => {
       if (activeAudio === audio) {
         console.error(
@@ -111,37 +185,68 @@
           sound.url,
           audio.error
         );
-
         showStatus(
-          `✗ FILE NOT FOUND OR UNPLAYABLE: ${sound.name} ✗`
+          `Could not load: ${sound.name}`
         );
+      }
+    }, { once: true });
+
+    audio.addEventListener('ended', () => {
+      if (activeAudio === audio) {
+        activeAudio = null;
       }
     }, { once: true });
 
     try {
       await audio.play();
     } catch (error) {
+      // Starting another sound interrupts the previous
+      // playback request. That is intentional.
+      if (activeAudio !== audio) return;
+
       console.error(
         'Playback failed:',
         sound.url,
         error
       );
 
-      if (activeAudio === audio) {
+      if (error.name === 'NotAllowedError') {
+        showStatus('Tap a sound to enable audio');
+      } else {
         showStatus(
-          error.name === 'NotAllowedError'
-            ? '⚠ TAP TO ENABLE AUDIO ⚠'
-            : `✗ COULD NOT PLAY: ${sound.name} ✗`
+          `Could not play: ${sound.name}`
         );
       }
+
+      activeAudio = null;
     }
   }
 
   function init() {
-    document.title = '🔊 The Archives';
+    document.title = 'The Archives';
 
-    $('search-input')?.addEventListener('input', render);
+    $('search-input')?.addEventListener(
+      'input',
+      render
+    );
 
+    // Pitch slider
+    $('pitch-slider')?.addEventListener(
+      'input',
+      event => {
+        setPitch(event.target.value);
+      }
+    );
+
+    // Return pitch and playback speed to normal.
+    $('pitch-reset')?.addEventListener(
+      'click',
+      () => setPitch(1.0)
+    );
+
+    setPitch(1.0);
+
+    // S key focuses search.
     document.addEventListener('keydown', event => {
       const target = event.target;
 
@@ -150,7 +255,8 @@
         !(target instanceof HTMLInputElement) &&
         !(target instanceof HTMLTextAreaElement) &&
         !event.ctrlKey &&
-        !event.metaKey
+        !event.metaKey &&
+        !event.altKey
       ) {
         event.preventDefault();
         $('search-input')?.focus();
@@ -174,8 +280,8 @@
     updateConnection();
     render();
 
-    // Do not register the existing service worker.
-    // This version prioritizes reliable online playback.
+    // Keep the existing online-only playback behavior.
+    // Do not register the old service worker.
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations()
         .then(regs => {
@@ -187,7 +293,7 @@
         })
         .catch(err => {
           console.warn(
-            'Could not unregister previous service worker:',
+            'Could not unregister service worker:',
             err
           );
         });
