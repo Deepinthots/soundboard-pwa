@@ -1,83 +1,361 @@
-<!doctype html>
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
-  <title>🔊 Office Soundboard</title>
-  <meta name="description" content="Office soundboard with searchable sound clips.">
-  <meta name="theme-color" content="#2a1b3d">
-  <link rel="icon" href="./public/favicon.svg" type="image/svg+xml">
-  <link rel="apple-touch-icon" href="./public/apple-touch-icon.png">
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111715">
+  <meta name="description" content="Office Soundboard">
+  <title>Office Soundboard</title>
+
+  <link rel="icon" href="./public/favicon.svg">
+
   <style>
- :root {
-  --pastel-pink: #79d99d;
-  --pastel-purple: #67efaa;
-  --pastel-blue: #78d9ac;
-  --pastel-cyan: #a7ffbe;
-  --pastel-green: #39ff75;
-  --pastel-yellow: #d4ff8b;
-  --pastel-orange: #b7ec68;
-  --pastel-coral: #64e398;
-  --dark-pink: #8c5070;
-  --dark-purple: #66518e;
-  --dark-blue: #4b6888;
-  --dark-cyan: #377a7e;
-  --dark-green: #438c60;
-  --dark-yellow: #8c8249;
-  --dark-orange: #8c6041;
-  --dark-coral: #8c4c60;
-  --bg-primary: #050d09;
-  --bg-secondary: #102317;
-  --bg-tertiary: #050d09;
-  --text-primary: #e0ffe9;
-  --text-secondary: #92bca0;
-  --text-accent: var(--pastel-cyan);
-}
-    * {box-sizing:border-box}
-    body {margin:0;min-height:100vh;padding:16px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,.02) 2px,rgba(255,255,255,.02) 4px),var(--bg);color:var(--text);font-family:'Press Start 2P','Courier New',monospace;line-height:1.8;display:flex;flex-direction:column}
-    main {flex:1}
-    .header {text-align:center;padding:24px 16px;margin-bottom:24px;background:var(--panel);border:4px solid var(--pink);box-shadow:4px 4px 0 #cc7da6,8px 8px 0 #a67dcc}
-    h1 {font-size:clamp(1rem,3vw,1.8rem);color:var(--cyan);text-shadow:2px 2px #7dcccc,4px 4px var(--bg);line-height:1.7;margin:0 0 8px}
-    .subtitle {font-size:.75rem;color:var(--yellow);margin:0;line-height:2}
-    .controls {background:var(--panel);border:4px solid var(--green);padding:20px;margin-bottom:24px;box-shadow:4px 4px 0 #7dcc7d,8px 8px 0 var(--bg)}
-    .search-input {display:block;width:100%;padding:14px 18px;background:var(--dark);border:3px solid var(--blue);color:var(--text);font:inherit;font-size:.8rem;line-height:1.8;outline:none}
-    .search-input:focus {border-color:var(--cyan);box-shadow:0 0 0 2px var(--yellow)}
-    .tip {text-align:center;color:var(--orange);font-size:.6rem;margin-top:16px;line-height:2}
-    .sounds-container {display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:16px;margin-top:20px}
-    .sound-button {padding:18px;border:3px solid var(--coral);background:var(--panel);color:var(--text);cursor:pointer;text-align:left;font-family:inherit;line-height:1.8;position:relative;box-shadow:3px 3px 0 #cc7d7d,6px 6px 0 var(--bg);min-height:94px}
-    .sound-button::before {content:'♪';position:absolute;top:6px;right:8px;color:var(--green)}
-    .sound-button:hover {background:var(--coral);color:var(--bg);border-color:var(--yellow);transform:translate(-2px,-2px)}
-    .sound-button:focus-visible {outline:3px solid var(--yellow);outline-offset:3px}
-    .sound-button:active {transform:translate(2px,2px)}
-    .sound-name {color:var(--cyan);font-size:.75rem;margin-bottom:10px;overflow-wrap:anywhere}
-    .sound-artist {color:var(--purple);font-size:.6rem}
-    .sound-button:hover .sound-name,.sound-button:hover .sound-artist {color:var(--bg)}
-    .loading {padding:36px;text-align:center;color:var(--purple);font-size:.8rem;grid-column:1/-1}
-    .status {position:fixed;top:16px;right:16px;max-width:min(500px,calc(100vw - 32px));padding:16px;background:var(--panel);border:3px solid var(--coral);font-size:.6rem;line-height:1.8;z-index:10;opacity:0;pointer-events:none;overflow-wrap:anywhere}
-    .status.show {opacity:1}
-    .status.success {border-color:var(--green)}
-    .offline-indicator {display:none;position:fixed;bottom:16px;left:16px;background:var(--panel);padding:14px;border:3px solid var(--orange);font-size:.6rem;line-height:1.8}
-    .offline-indicator.show {display:block}
-    .footer {text-align:center;padding:24px;margin-top:40px;background:var(--panel);border:4px solid var(--purple);box-shadow:4px 4px 0 #a67dcc,8px 8px 0 var(--bg)}
-    .footer-content {font-size:.6rem;color:var(--purple);line-height:2}
-    .footer-links {display:flex;justify-content:center;flex-wrap:wrap;gap:16px;margin-top:18px}
-    .footer-link {font-size:.6rem;color:var(--cyan);text-decoration:none;border:2px solid var(--cyan);padding:8px}
-    .footer-link:hover {background:var(--cyan);color:var(--bg)}
-    @media(max-width:500px){body{padding:12px}.controls{padding:12px}.search-input{font-size:.65rem}.tip{font-size:.5rem}.sound-name{font-size:.65rem}}
+    :root {
+      --bg: #111715;
+      --panel: #1b2521;
+      --panel-hover: #26372f;
+      --accent: #2d6a5b;
+      --accent-light: #69ab92;
+      --text: #f0f3f1;
+      --muted: #99aaa3;
+      --border: #304037;
+      --danger: #e88c8c;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    main {
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 48px 24px;
+      min-height: calc(100vh - 100px);
+    }
+
+    .header {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-bottom: 32px;
+    }
+
+    h1 {
+      font-size: clamp(1.7rem, 4vw, 2.4rem);
+      font-weight: 650;
+      letter-spacing: -0.8px;
+      margin: 0;
+      line-height: 1.3;
+    }
+
+    .subtitle {
+      color: var(--muted);
+      font-size: 0.9rem;
+      margin: 0;
+      letter-spacing: 0.2px;
+    }
+
+    .controls {
+      margin-bottom: 26px;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 16px 20px;
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      background: var(--panel);
+      color: var(--text);
+      font: inherit;
+      font-size: 0.95rem;
+      outline: none;
+      transition: border-color 0.2s,
+                  box-shadow 0.2s;
+    }
+
+    .search-input::placeholder {
+      color: var(--muted);
+    }
+
+    .search-input:focus {
+      border-color: var(--accent-light);
+      box-shadow: 0 0 0 3px rgba(105,171,146,.12);
+    }
+
+    .tip {
+      margin: 12px 0 0;
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .sounds-container {
+      display: grid;
+      grid-template-columns: repeat(
+        auto-fill,
+        minmax(min(235px, 100%), 1fr)
+      );
+      gap: 12px;
+    }
+
+    .sound-button {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      gap: 18px;
+      width: 100%;
+      min-height: 100px;
+      padding: 20px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      color: var(--text);
+      text-align: left;
+      font: inherit;
+      cursor: pointer;
+      transition: background 0.15s,
+                  border-color 0.15s,
+                  transform 0.15s;
+    }
+
+    .sound-button:hover {
+      background: var(--panel-hover);
+      border-color: var(--accent);
+      transform: translateY(-2px);
+    }
+
+    .sound-button:active {
+      background: var(--accent);
+      transform: translateY(0);
+    }
+
+    .sound-button:focus-visible {
+      outline: 2px solid var(--accent-light);
+      outline-offset: 3px;
+    }
+
+    .sound-button::after {
+      content: "▶";
+      position: absolute;
+      bottom: 17px;
+      right: 18px;
+      color: var(--accent-light);
+      font-size: 13px;
+    }
+
+    .sound-button:active::after {
+      color: white;
+    }
+
+    .sound-name {
+      font-size: 0.95rem;
+      font-weight: 550;
+      line-height: 1.4;
+      overflow-wrap: anywhere;
+      padding-right: 10px;
+    }
+
+    .sound-artist {
+      color: var(--muted);
+      font-size: 0.75rem;
+    }
+
+    .loading {
+      grid-column: 1 / -1;
+      padding: 40px;
+      text-align: center;
+      color: var(--muted);
+    }
+
+    .status {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 100;
+      max-width: min(400px, calc(100vw - 40px));
+      background: var(--panel);
+      border: 1px solid var(--danger);
+      border-radius: 10px;
+      padding: 16px 20px;
+      color: var(--text);
+      box-shadow: 0 8px 28px rgba(0,0,0,.3);
+      opacity: 0;
+      pointer-events: none;
+      overflow-wrap: anywhere;
+    }
+
+    .status.show {
+      opacity: 1;
+    }
+
+    .status.success {
+      border-color: var(--accent-light);
+    }
+
+    .offline-indicator {
+      display: none;
+      position: fixed;
+      bottom: 20px;
+      left: 20px;
+      padding: 12px 18px;
+      background: var(--panel);
+      border: 1px solid var(--danger);
+      border-radius: 10px;
+      color: var(--text);
+      font-size: 0.8rem;
+      z-index: 100;
+    }
+
+    .offline-indicator.show {
+      display: block;
+    }
+
+    .footer {
+      max-width: 1150px;
+      margin: 0 auto;
+      padding: 24px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .footer-content {
+      color: var(--muted);
+      font-size: 0.78rem;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-link {
+      color: var(--accent-light);
+      font-size: 0.8rem;
+      text-decoration: none;
+    }
+
+    .footer-link:hover {
+      text-decoration: underline;
+    }
+
+    @media (max-width: 600px) {
+      main {
+        padding: 28px 16px;
+      }
+
+      .header {
+        margin-bottom: 24px;
+      }
+
+      .sounds-container {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      .sound-button {
+        padding: 14px;
+        min-height: 105px;
+      }
+
+      .sound-name {
+        font-size: 0.84rem;
+      }
+
+      .footer {
+        padding: 20px 16px;
+      }
+    }
+
+    @media (max-width: 360px) {
+      .sounds-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .sound-button,
+      .search-input {
+        transition: none;
+      }
+    }
   </style>
 </head>
+
 <body>
   <main>
-    <header class="header"><h1>♫ OFFICE SOUNDBOARD ♫</h1><p class="subtitle">OFFICE SOUNDS • <span id="sound-count">0</span> AUDIO DROPS</p></header>
-    <section class="controls" aria-label="Soundboard controls"><input type="search" id="search-input" class="search-input" placeholder="SEARCH FOR SOUNDS..." aria-label="Search sounds" autocomplete="off"><p class="tip">↑ PRESS [S] TO SEARCH • CLICK TO PLAY ↑</p></section>
-    <section id="sounds-container" class="sounds-container" aria-label="Sound clips"><div class="loading">LOADING SOUNDS...</div></section>
+    <header class="header">
+      <h1>Office Soundboard</h1>
+      <p class="subtitle">
+        <span id="sound-count">0</span> sounds available
+      </p>
+    </header>
+
+    <section class="controls"
+             aria-label="Soundboard controls">
+      <input
+        type="search"
+        id="search-input"
+        class="search-input"
+        placeholder="Search sounds..."
+        aria-label="Search sounds"
+        autocomplete="off"
+      >
+      <p class="tip">
+        Press S to search · Click any sound to play
+      </p>
+    </section>
+
+    <section
+      id="sounds-container"
+      class="sounds-container"
+      aria-label="Sound clips"
+    >
+      <div class="loading">Loading sounds...</div>
+    </section>
   </main>
-  <footer class="footer"><div class="footer-content">POWERED BY PWA SOUNDBOARD • OPEN SOURCE &amp; FREE TO USE</div><nav class="footer-links" aria-label="Links"><a class="footer-link" href="https://github.com/Deepinthots/soundboard-pwa" target="_blank" rel="noopener">📂 SOURCE CODE</a><a class="footer-link" href="https://github.com/Deepinthots/soundboard-pwa#readme" target="_blank" rel="noopener">📖 DOCUMENTATION</a></nav></footer>
-  <div id="status" class="status" role="status" aria-live="polite"></div>
-  <div id="offline-indicator" class="offline-indicator">OFFLINE — SOUNDS REQUIRE CONNECTION</div>
+
+  <footer class="footer">
+    <div class="footer-content">
+      Office Soundboard
+    </div>
+    <nav class="footer-links" aria-label="Links">
+      <a
+        class="footer-link"
+        href="https://github.com/Deepinthots/soundboard-pwa"
+        target="_blank"
+        rel="noopener noreferrer"
+      >GitHub</a>
+    </nav>
+  </footer>
+
+  <div
+    id="status"
+    class="status"
+    role="status"
+    aria-live="polite"
+  ></div>
+
+  <div
+    id="offline-indicator"
+    class="offline-indicator"
+  >
+    Offline — sounds require a connection
+  </div>
+
   <script src="./main.js?v=20261022-fix1" defer></script>
 </body>
 </html>
