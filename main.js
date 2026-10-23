@@ -13,7 +13,7 @@
     'Peckham Laugh', 'PENQUITOS', 'PERFECT!', 'Pop Fart',
     'SarcastiBilly', 'Soft Billy', 'TIIIIOOOTTS',
     'Usual Suspects Billy', 'Wet Fart', 'Ya (boner!)',
-    'Yes but No', "You're losing it, Billy", 'Yyyyeeaaaaaah'
+    'Yes but No', "You're losing it, Billy", 'Yyyyeeaaaaaaah'
   ];
 
   // Resolve URLs relative to this document.
