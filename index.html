@@ -4,28 +4,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#111715">
-  <meta name="description" content="The Archives">
+  <meta name="theme-color" content="#080a09">
+  <meta name="description" content="The Archives — a collection of sound clips">
   <title>The Archives</title>
-
   <link rel="icon" href="./public/favicon.svg">
-
   <style>
     :root {
-      --bg: #111715;
-      --panel: #1b2521;
-      --panel-hover: #26372f;
+      --bg: #080a09;
+      --panel: #111413;
+      --panel-hover: #19251f;
+      --panel-active: #1b3026;
       --accent: #2d6a5b;
-      --accent-light: #69ab92;
-      --text: #f0f3f1;
-      --muted: #99aaa3;
-      --border: #304037;
-      --danger: #e88c8c;
+      --accent-light: #5e9c87;
+      --text: #f3f5f4;
+      --muted: #8f9a95;
+      --border: #232927;
+      --danger: #d48686;
     }
 
-    * {
-      box-sizing: border-box;
-    }
+    * { box-sizing: border-box; }
 
     body {
       margin: 0;
@@ -37,74 +34,62 @@
     }
 
     main {
-      max-width: 1150px;
+      width: 100%;
+      max-width: 1600px;
       margin: 0 auto;
-      padding: 48px 24px;
-      min-height: calc(100vh - 100px);
+      padding: 28px 12px 40px;
+      min-height: calc(100vh - 70px);
     }
 
-    .header {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-      margin-bottom: 32px;
-    }
+    .header { margin-bottom: 22px; }
 
     h1 {
-      font-size: clamp(1.7rem, 4vw, 2.4rem);
+      margin: 0 0 5px;
+      font-size: clamp(1.65rem, 3vw, 2.2rem);
       font-weight: 650;
-      letter-spacing: -0.8px;
-      margin: 0;
-      line-height: 1.3;
+      letter-spacing: -0.7px;
+      line-height: 1.25;
     }
 
     .subtitle {
-      color: var(--muted);
-      font-size: 0.9rem;
       margin: 0;
-      letter-spacing: 0.2px;
+      color: var(--muted);
+      font-size: 0.85rem;
     }
 
-    .controls {
-      margin-bottom: 26px;
-    }
+    .controls { margin-bottom: 16px; }
 
     .search-input {
       width: 100%;
-      padding: 16px 20px;
+      padding: 12px 14px;
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 9px;
       background: var(--panel);
       color: var(--text);
       font: inherit;
-      font-size: 0.95rem;
+      font-size: 0.9rem;
       outline: none;
-      transition: border-color 0.2s,
-                  box-shadow 0.2s;
+      transition: border-color .15s, box-shadow .15s;
     }
 
-    .search-input::placeholder {
-      color: var(--muted);
-    }
+    .search-input::placeholder { color: var(--muted); }
 
     .search-input:focus {
       border-color: var(--accent-light);
-      box-shadow: 0 0 0 3px rgba(105,171,146,.12);
+      box-shadow: 0 0 0 3px rgba(94,156,135,.12);
     }
 
     .tip {
-      margin: 12px 0 0;
+      margin: 9px 0 0;
       color: var(--muted);
-      font-size: 0.78rem;
+      font-size: 0.75rem;
     }
 
     .sounds-container {
       display: grid;
-      grid-template-columns: repeat(
-        auto-fill,
-        minmax(min(235px, 100%), 1fr)
-      );
-      gap: 12px;
+      grid-template-columns:
+        repeat(auto-fill, minmax(min(190px, 100%), 1fr));
+      gap: 8px;
     }
 
     .sound-button {
@@ -112,123 +97,111 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      gap: 18px;
+      gap: 8px;
       width: 100%;
-      min-height: 100px;
-      padding: 20px;
+      min-height: 72px;
+      padding: 12px 35px 12px 12px;
       background: var(--panel);
       border: 1px solid var(--border);
-      border-radius: 12px;
+      border-radius: 9px;
       color: var(--text);
       text-align: left;
       font: inherit;
       cursor: pointer;
-      transition: background 0.15s,
-                  border-color 0.15s,
-                  transform 0.15s;
+      transition: background .15s, border-color .15s,
+                  box-shadow .15s, transform .15s;
     }
 
     .sound-button:hover {
       background: var(--panel-hover);
-      border-color: var(--accent);
-      transform: translateY(-2px);
+      border-color: #3e8065;
+      box-shadow: 0 0 0 1px rgba(45,106,91,.15);
+      transform: translateY(-1px);
     }
 
     .sound-button:active {
-      background: var(--accent);
+      background: var(--panel-active);
+      border-color: var(--accent-light);
       transform: translateY(0);
     }
 
     .sound-button:focus-visible {
       outline: 2px solid var(--accent-light);
-      outline-offset: 3px;
+      outline-offset: 2px;
     }
 
     .sound-button::after {
       content: "▶";
       position: absolute;
-      bottom: 17px;
-      right: 18px;
+      right: 12px;
+      bottom: 12px;
       color: var(--accent-light);
-      font-size: 13px;
-    }
-
-    .sound-button:active::after {
-      color: white;
+      font-size: 12px;
     }
 
     .sound-name {
-      font-size: 0.95rem;
+      font-size: 0.88rem;
       font-weight: 550;
-      line-height: 1.4;
+      line-height: 1.3;
       overflow-wrap: anywhere;
-      padding-right: 10px;
     }
 
     .sound-artist {
       color: var(--muted);
-      font-size: 0.75rem;
+      font-size: 0.71rem;
     }
 
     .loading {
       grid-column: 1 / -1;
-      padding: 40px;
-      text-align: center;
+      padding: 40px 12px;
       color: var(--muted);
+      text-align: center;
     }
 
     .status {
       position: fixed;
-      top: 20px;
-      right: 20px;
+      top: 16px;
+      right: 16px;
       z-index: 100;
-      max-width: min(400px, calc(100vw - 40px));
-      background: var(--panel);
+      max-width: min(400px, calc(100vw - 32px));
+      padding: 14px 16px;
       border: 1px solid var(--danger);
-      border-radius: 10px;
-      padding: 16px 20px;
+      border-radius: 9px;
+      background: var(--panel);
       color: var(--text);
-      box-shadow: 0 8px 28px rgba(0,0,0,.3);
+      box-shadow: 0 8px 28px rgba(0,0,0,.35);
       opacity: 0;
       pointer-events: none;
       overflow-wrap: anywhere;
     }
 
-    .status.show {
-      opacity: 1;
-    }
-
-    .status.success {
-      border-color: var(--accent-light);
-    }
+    .status.show { opacity: 1; }
+    .status.success { border-color: var(--accent-light); }
 
     .offline-indicator {
       display: none;
       position: fixed;
-      bottom: 20px;
-      left: 20px;
-      padding: 12px 18px;
+      bottom: 16px;
+      left: 16px;
+      z-index: 100;
+      padding: 10px 14px;
       background: var(--panel);
       border: 1px solid var(--danger);
-      border-radius: 10px;
-      color: var(--text);
+      border-radius: 9px;
       font-size: 0.8rem;
-      z-index: 100;
     }
 
-    .offline-indicator.show {
-      display: block;
-    }
+    .offline-indicator.show { display: block; }
 
     .footer {
-      max-width: 1150px;
+      max-width: 1600px;
       margin: 0 auto;
-      padding: 24px;
+      padding: 18px 12px;
       border-top: 1px solid var(--border);
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      gap: 20px;
+      justify-content: space-between;
+      gap: 16px;
       flex-wrap: wrap;
     }
 
@@ -237,60 +210,37 @@
       font-size: 0.78rem;
     }
 
-    .footer-links {
-      display: flex;
-      gap: 20px;
-    }
-
     .footer-link {
       color: var(--accent-light);
-      font-size: 0.8rem;
       text-decoration: none;
+      font-size: 0.8rem;
     }
 
-    .footer-link:hover {
-      text-decoration: underline;
-    }
+    .footer-link:hover { text-decoration: underline; }
 
     @media (max-width: 600px) {
-      main {
-        padding: 28px 16px;
-      }
-
-      .header {
-        margin-bottom: 24px;
-      }
+      main { padding: 22px 10px 32px; }
 
       .sounds-container {
         grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 10px;
+        gap: 8px;
       }
 
       .sound-button {
-        padding: 14px;
-        min-height: 105px;
+        min-height: 76px;
+        padding: 11px 26px 11px 10px;
       }
 
-      .sound-name {
-        font-size: 0.84rem;
-      }
-
-      .footer {
-        padding: 20px 16px;
-      }
+      .sound-name { font-size: 0.82rem; }
+      .footer { padding: 16px 10px; }
     }
 
-    @media (max-width: 360px) {
-      .sounds-container {
-        grid-template-columns: 1fr;
-      }
+    @media (max-width: 350px) {
+      .sounds-container { grid-template-columns: 1fr; }
     }
 
     @media (prefers-reduced-motion: reduce) {
-      .sound-button,
-      .search-input {
-        transition: none;
-      }
+      .search-input, .sound-button { transition: none; }
     }
   </style>
 </head>
@@ -304,19 +254,16 @@
       </p>
     </header>
 
-    <section class="controls"
-             aria-label="Soundboard controls">
+    <section class="controls" aria-label="Soundboard controls">
       <input
-        type="search"
         id="search-input"
         class="search-input"
+        type="search"
         placeholder="Search sounds..."
         aria-label="Search sounds"
         autocomplete="off"
       >
-      <p class="tip">
-        Press S to search · Click any sound to play
-      </p>
+      <p class="tip">Press S to search · Click any sound to play</p>
     </section>
 
     <section
@@ -329,10 +276,8 @@
   </main>
 
   <footer class="footer">
-    <div class="footer-content">
-      The Archives
-    </div>
-    <nav class="footer-links" aria-label="Links">
+    <div class="footer-content">The Archives</div>
+    <nav aria-label="Links">
       <a
         class="footer-link"
         href="https://github.com/Deepinthots/soundboard-pwa"
@@ -342,17 +287,9 @@
     </nav>
   </footer>
 
-  <div
-    id="status"
-    class="status"
-    role="status"
-    aria-live="polite"
-  ></div>
+  <div id="status" class="status" role="status" aria-live="polite"></div>
 
-  <div
-    id="offline-indicator"
-    class="offline-indicator"
-  >
+  <div id="offline-indicator" class="offline-indicator">
     Offline — sounds require a connection
   </div>
 
