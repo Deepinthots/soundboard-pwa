@@ -8,7 +8,7 @@
     'Billy Fanfare', 'Billy Hum 1', 'Billy Hum 2', 'Billy Hum 3',
     'Billy Laugh 1', 'Boner 1', 'Bully Maguire', 'Defeated Billy',
     'DIP-PY', 'Downward Fart', 'Dry Mop', 'Goat Ray', 'GOO!',
-    'HHHHHHHUUUUUOOOO', 'HHHUUUOO', 'Humming Billy Laugh', 'HUO',
+    'HHHHHHHHUUUUUOOOO', 'HHHUUUOO', 'Humming Billy Laugh', 'HUO',
     'Inflected Billy', 'JEW JEW', 'Jurrassic Lomo', 'No but Yes',
     'Peckham Laugh', 'PENQUITOS', 'PERFECT!', 'Pop Fart',
     'SarcastiBilly', 'Soft Billy', 'TIIIIOOOTTS',
