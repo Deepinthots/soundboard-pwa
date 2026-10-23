@@ -100,7 +100,7 @@
 
     if (!Number.isFinite(parsed)) return;
 
-    pitch = Math.max(0.50, Math.min(2.0, parsed));
+    pitch = Math.max(0.50, Math.min(3.0, parsed));
 
     const slider = $('pitch-slider');
     const display = $('pitch-value');
