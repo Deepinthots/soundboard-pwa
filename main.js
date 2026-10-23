@@ -6,7 +6,7 @@
   const files = [
     '5 Farter Death Punch', 'A Question, Billy', 'AH', 'AHHHH',
     'Billy Fanfare', 'Billy Hum 1', 'Billy Hum 2', 'Billy Hum 3',
-    'Billy Laugh 1', 'Boner 1', 'Bully Maguire', 'Defeated Billy',
+    'Billy Laugh 1', 'Boner1', 'Bully Maguire', 'Defeated Billy',
     'DIP-PY', 'Downward Fart', 'Dry Mop', 'Goat Ray', 'GOO!',
     'HHHHHHHHUUUUUOOOO', 'HHHUUUOO', 'Humming Billy Laugh', 'HUO',
     'Inflected Billy', 'JEW JEW', 'Jurrassic Lomo', 'No but Yes',
