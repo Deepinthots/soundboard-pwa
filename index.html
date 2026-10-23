@@ -1,520 +1,60 @@
 <!doctype html>
 <html lang="en">
-	<head>
-		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-		<title>🔊 Soundboard PWA</title>
-		<meta
-			name="description"
-			content="A Progressive Web App soundboard that works offline and can be installed as a standalone app."
-		/>
-
-		<!-- Open Graph / Facebook -->
-		<meta property="og:type" content="website" />
-		<meta property="og:url" content="https://app.neilrogers.org/" />
-		<meta property="og:title" content="🔊 Soundboard PWA" />
-		<meta
-			property="og:description"
-			content="A Progressive Web App soundboard that works offline and can be installed as a standalone app."
-		/>
-		<meta property="og:image" content="./public/icons/icon-512x512.png" />
-		<meta property="og:image:width" content="512" />
-		<meta property="og:image:height" content="512" />
-		<meta property="og:image:alt" content="Soundboard PWA Icon" />
-		<meta property="og:site_name" content="Soundboard PWA" />
-		<meta property="og:locale" content="en_US" />
-
-		<!-- Twitter -->
-		<meta property="twitter:card" content="summary_large_image" />
-		<meta property="twitter:url" content="https://app.neilrogers.org/" />
-		<meta property="twitter:title" content="🔊 Soundboard PWA" />
-		<meta
-			property="twitter:description"
-			content="A Progressive Web App soundboard that works offline and can be installed as a standalone app."
-		/>
-		<meta property="twitter:image" content="./public/icons/icon-512x512.png" />
-		<meta
-			property="twitter:image:alt"
-			content="Soundboard PWA - Offline capable audio soundboard"
-		/>
-
-		<!-- Additional Social Media Meta -->
-		<meta name="author" content="Soundboard PWA" />
-		<meta
-			name="keywords"
-			content="soundboard, audio, pwa, progressive web app, offline, installable, sounds"
-		/>
-		<meta name="robots" content="index, follow" />
-		<meta name="language" content="English" />
-
-		<!-- PWA Manifest -->
-		<link rel="manifest" href="./public/manifest.json" />
-
-		<!-- Theme color -->
-		<meta name="theme-color" content="#1a1a1a" />
-
-		<!-- Apple PWA meta tags -->
-		<meta name="apple-mobile-web-app-capable" content="yes" />
-		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-		<meta name="apple-mobile-web-app-title" content="Soundboard PWA" />
-		<!-- Icons -->
-		<link rel="icon" href="./public/favicon.svg" type="image/svg+xml" />
-		<link rel="apple-touch-icon" href="./public/apple-touch-icon.png" />
-
-		<!-- 8-bit pixel font -->
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
-		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap"
-			rel="stylesheet"
-		/>
-
-		<style>
-			:root {
-				--pastel-pink: #ffb3d9;
-				--pastel-purple: #d9b3ff;
-				--pastel-blue: #b3d9ff;
-				--pastel-cyan: #b3ffff;
-				--pastel-green: #b3ffb3;
-				--pastel-yellow: #ffffb3;
-				--pastel-orange: #ffdb7d;
-				--pastel-coral: #ffb3b3;
-				--dark-pink: #cc7da6;
-				--dark-purple: #a67dcc;
-				--dark-blue: #7da6cc;
-				--dark-cyan: #7dcccc;
-				--dark-green: #7dcc7d;
-				--dark-yellow: #cccc7d;
-				--dark-orange: #cca87d;
-				--dark-coral: #cc7d7d;
-				--bg-primary: #2a1b3d;
-				--bg-secondary: #44475a;
-				--bg-tertiary: #282a36;
-				--text-primary: #f8f8f2;
-				--text-secondary: #6272a4;
-				--text-accent: var(--pastel-cyan);
-			}
-
-			* {
-				box-sizing: border-box;
-				margin: 0;
-				padding: 0;
-			}
-			body {
-				font-family: "Press Start 2P", "Courier New", monospace;
-				background: var(--bg-primary);
-				color: var(--text-primary);
-				min-height: 100vh;
-				padding: 16px;
-				line-height: 1.8;
-				image-rendering: pixelated;
-				-webkit-font-smoothing: none;
-				-moz-osx-font-smoothing: unset;
-				text-rendering: optimizeSpeed;
-				background-image: repeating-linear-gradient(
-					0deg,
-					transparent,
-					transparent 2px,
-					rgba(255, 255, 255, 0.02) 2px,
-					rgba(255, 255, 255, 0.02) 4px
-				);
-				display: flex;
-				flex-direction: column;
-			}
-
-			.main-content {
-				flex: 1;
-			}
-
-			.header {
-				text-align: center;
-				padding: 20px 0;
-				border-bottom: 4px solid var(--pastel-purple);
-				margin-bottom: 20px;
-				background: var(--bg-secondary);
-				border: 4px solid var(--pastel-pink);
-				border-radius: 0;
-				box-shadow:
-					4px 4px 0px var(--dark-pink),
-					8px 8px 0px var(--dark-purple);
-				position: relative;
-			}
-
-			.header::before {
-				content: "";
-				position: absolute;
-				top: -2px;
-				left: -2px;
-				right: -2px;
-				bottom: -2px;
-				background: linear-gradient(45deg, var(--pastel-cyan), var(--pastel-yellow));
-				z-index: -1;
-				border-radius: 0;
-			}
-			.header h1 {
-				font-size: 1.8rem;
-				margin-bottom: 12px;
-				color: var(--pastel-cyan);
-				text-shadow:
-					2px 2px 0px var(--dark-cyan),
-					4px 4px 0px var(--bg-primary),
-					1px 1px 0px rgba(0, 0, 0, 0.8);
-				letter-spacing: 1px;
-			}
-
-			.header .subtitle {
-				color: var(--pastel-yellow);
-				font-size: 0.8rem;
-				line-height: 1.8;
-				text-shadow:
-					1px 1px 0px var(--dark-yellow),
-					2px 2px 0px rgba(0, 0, 0, 0.8);
-			}
-
-			.controls {
-				background: var(--bg-secondary);
-				border: 4px solid var(--pastel-green);
-				padding: 20px;
-				margin-bottom: 20px;
-				box-shadow:
-					4px 4px 0px var(--dark-green),
-					8px 8px 0px var(--bg-primary);
-				position: relative;
-			}
-
-			.controls::after {
-				content: "";
-				position: absolute;
-				top: 8px;
-				left: 8px;
-				right: 8px;
-				bottom: 8px;
-				border: 2px solid var(--pastel-cyan);
-				pointer-events: none;
-			}
-
-			.search-container {
-				margin-bottom: 16px;
-			}
-			.search-input {
-				width: 100%;
-				padding: 14px 18px;
-				font-size: 0.9rem;
-				font-family: "Press Start 2P", monospace;
-				border: 3px solid var(--pastel-blue);
-				background: var(--bg-tertiary);
-				color: var(--text-primary);
-				box-shadow:
-					inset 2px 2px 0px var(--bg-primary),
-					2px 2px 0px var(--dark-blue);
-				outline: none;
-				transition: none;
-				line-height: 1.4;
-			}
-
-			.search-input::placeholder {
-				color: var(--text-secondary);
-			}
-
-			.search-input:focus {
-				border-color: var(--pastel-cyan);
-				box-shadow:
-					inset 2px 2px 0px var(--bg-primary),
-					2px 2px 0px var(--dark-cyan),
-					0 0 0 2px var(--pastel-yellow);
-			}
-			.tip {
-				font-size: 0.7rem;
-				color: var(--pastel-orange);
-				text-shadow:
-					1px 1px 0px var(--dark-orange),
-					2px 2px 0px rgba(0, 0, 0, 0.8);
-				text-align: center;
-				line-height: 1.6;
-			}
-
-			.sounds-container {
-				display: grid;
-				grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-				gap: 16px;
-				margin-top: 20px;
-			}
-			.sound-button {
-				padding: 18px;
-				border: 3px solid var(--pastel-coral);
-				background: var(--bg-secondary);
-				color: var(--text-primary);
-				cursor: pointer;
-				text-align: left;
-				font-size: 0.8rem;
-				font-family: "Press Start 2P", monospace;
-				line-height: 1.8;
-				position: relative;
-				transition: none;
-				box-shadow:
-					3px 3px 0px var(--dark-coral),
-					6px 6px 0px var(--bg-primary);
-			}
-
-			.sound-button:hover {
-				background: var(--pastel-coral);
-				color: var(--bg-primary);
-				border-color: var(--pastel-yellow);
-				box-shadow:
-					3px 3px 0px var(--dark-yellow),
-					6px 6px 0px var(--bg-primary),
-					9px 9px 0px var(--dark-coral);
-				transform: translate(-2px, -2px);
-			}
-
-			.sound-button:active {
-				transform: translate(2px, 2px);
-				box-shadow:
-					1px 1px 0px var(--dark-coral),
-					2px 2px 0px var(--bg-primary);
-			}
-			.sound-button::before {
-				content: "♪";
-				position: absolute;
-				top: 8px;
-				right: 8px;
-				color: var(--pastel-green);
-				font-size: 0.8rem;
-			}
-			.sound-name {
-				font-weight: normal;
-				margin-bottom: 10px;
-				color: var(--pastel-cyan);
-				text-shadow:
-					1px 1px 0px var(--dark-cyan),
-					2px 2px 0px rgba(0, 0, 0, 0.8);
-				font-size: 0.8rem;
-			}
-
-			.sound-artist {
-				font-size: 0.65rem;
-				color: var(--pastel-purple);
-				text-shadow:
-					1px 1px 0px var(--dark-purple),
-					2px 2px 0px rgba(0, 0, 0, 0.8);
-				line-height: 1.4;
-			}
-
-			.status {
-				position: fixed;
-				top: 20px;
-				right: 20px;
-				padding: 14px 18px;
-				background: var(--bg-secondary);
-				color: var(--text-primary);
-				font-size: 0.75rem;
-				font-family: "Press Start 2P", monospace;
-				z-index: 1000;
-				opacity: 0;
-				transition: opacity 0.3s ease;
-				border: 3px solid var(--pastel-blue);
-				box-shadow:
-					3px 3px 0px var(--dark-blue),
-					6px 6px 0px var(--bg-primary);
-				line-height: 1.6;
-			}
-
-			.status.show {
-				opacity: 1;
-			}
-
-			.status.success {
-				border-color: var(--pastel-green);
-				box-shadow:
-					3px 3px 0px var(--dark-green),
-					6px 6px 0px var(--bg-primary);
-			}
-
-			.status.error {
-				border-color: var(--pastel-coral);
-				box-shadow:
-					3px 3px 0px var(--dark-coral),
-					6px 6px 0px var(--bg-primary);
-			}
-
-			.loading {
-				text-align: center;
-				padding: 40px;
-				color: var(--pastel-purple);
-				font-size: 0.9rem;
-				text-shadow:
-					1px 1px 0px var(--dark-purple),
-					2px 2px 0px rgba(0, 0, 0, 0.8);
-				line-height: 1.6;
-			}
-
-			.loading::before {
-				content: "⟡ ";
-				animation: pixel-spin 1s steps(4) infinite;
-			}
-
-			@keyframes pixel-spin {
-				0% {
-					content: "⟡ ";
-				}
-				25% {
-					content: "⟢ ";
-				}
-				50% {
-					content: "⟣ ";
-				}
-				75% {
-					content: "⟤ ";
-				}
-			}
-			.offline-indicator {
-				position: fixed;
-				bottom: 20px;
-				left: 20px;
-				background: var(--bg-secondary);
-				color: var(--text-primary);
-				padding: 14px 18px;
-				font-size: 0.75rem;
-				font-family: "Press Start 2P", monospace;
-				z-index: 1000;
-				display: none;
-				border: 3px solid var(--pastel-orange);
-				box-shadow:
-					3px 3px 0px var(--dark-orange),
-					6px 6px 0px var(--bg-primary);
-				line-height: 1.6;
-			}
-
-			.offline-indicator.show {
-				display: block;
-			}
-
-			.offline-indicator::before {
-				content: "📡 ";
-				color: var(--pastel-orange);
-			}
-
-			.footer {
-				margin-top: 40px;
-				padding: 24px;
-				background: var(--bg-secondary);
-				border: 4px solid var(--pastel-purple);
-				box-shadow:
-					4px 4px 0px var(--dark-purple),
-					8px 8px 0px var(--bg-primary);
-				text-align: center;
-				position: relative;
-			}
-
-			.footer::before {
-				content: "";
-				position: absolute;
-				top: 8px;
-				left: 8px;
-				right: 8px;
-				bottom: 8px;
-				border: 2px solid var(--pastel-cyan);
-				pointer-events: none;
-			}
-
-			.footer-content {
-				color: var(--pastel-purple);
-				font-size: 0.6rem;
-				line-height: 1.8;
-				margin-bottom: 16px;
-				text-shadow:
-					1px 1px 0px var(--dark-purple),
-					2px 2px 0px rgba(0, 0, 0, 0.8);
-			}
-
-			.footer-links {
-				display: flex;
-				justify-content: center;
-				gap: 20px;
-				flex-wrap: wrap;
-				margin-bottom: 16px;
-			}
-
-			.footer-link {
-				color: var(--pastel-cyan);
-				text-decoration: none;
-				font-size: 0.65rem;
-				padding: 8px 12px;
-				border: 2px solid var(--pastel-cyan);
-				background: var(--bg-primary);
-				transition: none;
-				text-shadow: 1px 1px 0px var(--dark-cyan);
-			}
-
-			.footer-link:hover {
-				background: var(--pastel-cyan);
-				color: var(--bg-primary);
-				box-shadow: 2px 2px 0px var(--dark-cyan);
-				transform: translate(-1px, -1px);
-			}
-
-			.footer-credit {
-				color: var(--pastel-yellow);
-				font-size: 0.55rem;
-				text-shadow: 1px 1px 0px var(--dark-yellow);
-				margin-top: 12px;
-			}
-		</style>
-	</head>
-	<body>
-		<div class="main-content">
-			<div class="header">
-				<h1>♫ SOUNDBOARD ♫</h1>
-				<p class="subtitle">SOUNDBOARD • <span id="sound-count">0</span> AUDIO DROPS</p>
-			</div>
-
-			<div class="controls">
-				<div class="search-container">
-					<input
-						type="search"
-						id="search-input"
-						class="search-input"
-						placeholder="SEARCH FOR SOUNDS..."
-						autocomplete="off"
-					/>
-				</div>
-				<div class="tip">↑ PRESS [S] TO SEARCH • CLICK TO PLAY ↑</div>
-			</div>
-
-			<div id="sounds-container" class="sounds-container">
-				<div class="loading">LOADING SOUNDS...</div>
-			</div>
-		</div>
-
-		<footer class="footer">
-			<div class="footer-content">POWERED BY PWA SOUNDBOARD • OPEN SOURCE & FREE TO USE</div>
-			<div class="footer-links">
-				<a
-					href="https://github.com/digitalcolony/soundboard-pwa"
-					class="footer-link"
-					target="_blank"
-					rel="noopener"
-				>
-					📂 SOURCE CODE
-				</a>
-				<a
-					href="https://github.com/digitalcolony/soundboard-pwa#readme"
-					class="footer-link"
-					target="_blank"
-					rel="noopener"
-				>
-					📖 DOCUMENTATION
-				</a>
-				<a href="https://neilrogers.org/" class="footer-link" target="_blank" rel="noopener">
-					📻 THE NEIL ROGERS SHOW
-				</a>
-			</div>
-			<div class="footer-credit">2025-2026 Michael Allen Smith</div>
-		</footer>
-
-		<div id="status" class="status"></div>
-		<div id="offline-indicator" class="offline-indicator">OFFLINE MODE - USING CACHED SOUNDS</div>
-
-		<script src="./public/main.js"></script>
-	</body>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>🔊 Office Soundboard</title>
+  <meta name="description" content="Office soundboard with searchable sound clips.">
+  <meta name="theme-color" content="#2a1b3d">
+  <link rel="icon" href="./public/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="./public/apple-touch-icon.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+  <style>
+    :root {--pink:#ffb3d9;--purple:#d9b3ff;--blue:#b3d9ff;--cyan:#b3ffff;--green:#b3ffb3;--yellow:#ffffb3;--orange:#ffdb7d;--coral:#ffb3b3;--bg:#2a1b3d;--panel:#44475a;--dark:#282a36;--text:#f8f8f2}
+    * {box-sizing:border-box}
+    body {margin:0;min-height:100vh;padding:16px;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(255,255,255,.02) 2px,rgba(255,255,255,.02) 4px),var(--bg);color:var(--text);font-family:'Press Start 2P','Courier New',monospace;line-height:1.8;display:flex;flex-direction:column}
+    main {flex:1}
+    .header {text-align:center;padding:24px 16px;margin-bottom:24px;background:var(--panel);border:4px solid var(--pink);box-shadow:4px 4px 0 #cc7da6,8px 8px 0 #a67dcc}
+    h1 {font-size:clamp(1rem,3vw,1.8rem);color:var(--cyan);text-shadow:2px 2px #7dcccc,4px 4px var(--bg);line-height:1.7;margin:0 0 8px}
+    .subtitle {font-size:.75rem;color:var(--yellow);margin:0;line-height:2}
+    .controls {background:var(--panel);border:4px solid var(--green);padding:20px;margin-bottom:24px;box-shadow:4px 4px 0 #7dcc7d,8px 8px 0 var(--bg)}
+    .search-input {display:block;width:100%;padding:14px 18px;background:var(--dark);border:3px solid var(--blue);color:var(--text);font:inherit;font-size:.8rem;line-height:1.8;outline:none}
+    .search-input:focus {border-color:var(--cyan);box-shadow:0 0 0 2px var(--yellow)}
+    .tip {text-align:center;color:var(--orange);font-size:.6rem;margin-top:16px;line-height:2}
+    .sounds-container {display:grid;grid-template-columns:repeat(auto-fill,minmax(min(280px,100%),1fr));gap:16px;margin-top:20px}
+    .sound-button {padding:18px;border:3px solid var(--coral);background:var(--panel);color:var(--text);cursor:pointer;text-align:left;font-family:inherit;line-height:1.8;position:relative;box-shadow:3px 3px 0 #cc7d7d,6px 6px 0 var(--bg);min-height:94px}
+    .sound-button::before {content:'♪';position:absolute;top:6px;right:8px;color:var(--green)}
+    .sound-button:hover {background:var(--coral);color:var(--bg);border-color:var(--yellow);transform:translate(-2px,-2px)}
+    .sound-button:focus-visible {outline:3px solid var(--yellow);outline-offset:3px}
+    .sound-button:active {transform:translate(2px,2px)}
+    .sound-name {color:var(--cyan);font-size:.75rem;margin-bottom:10px;overflow-wrap:anywhere}
+    .sound-artist {color:var(--purple);font-size:.6rem}
+    .sound-button:hover .sound-name,.sound-button:hover .sound-artist {color:var(--bg)}
+    .loading {padding:36px;text-align:center;color:var(--purple);font-size:.8rem;grid-column:1/-1}
+    .status {position:fixed;top:16px;right:16px;max-width:min(500px,calc(100vw - 32px));padding:16px;background:var(--panel);border:3px solid var(--coral);font-size:.6rem;line-height:1.8;z-index:10;opacity:0;pointer-events:none;overflow-wrap:anywhere}
+    .status.show {opacity:1}
+    .status.success {border-color:var(--green)}
+    .offline-indicator {display:none;position:fixed;bottom:16px;left:16px;background:var(--panel);padding:14px;border:3px solid var(--orange);font-size:.6rem;line-height:1.8}
+    .offline-indicator.show {display:block}
+    .footer {text-align:center;padding:24px;margin-top:40px;background:var(--panel);border:4px solid var(--purple);box-shadow:4px 4px 0 #a67dcc,8px 8px 0 var(--bg)}
+    .footer-content {font-size:.6rem;color:var(--purple);line-height:2}
+    .footer-links {display:flex;justify-content:center;flex-wrap:wrap;gap:16px;margin-top:18px}
+    .footer-link {font-size:.6rem;color:var(--cyan);text-decoration:none;border:2px solid var(--cyan);padding:8px}
+    .footer-link:hover {background:var(--cyan);color:var(--bg)}
+    @media(max-width:500px){body{padding:12px}.controls{padding:12px}.search-input{font-size:.65rem}.tip{font-size:.5rem}.sound-name{font-size:.65rem}}
+  </style>
+</head>
+<body>
+  <main>
+    <header class="header"><h1>♫ OFFICE SOUNDBOARD ♫</h1><p class="subtitle">OFFICE SOUNDS • <span id="sound-count">0</span> AUDIO DROPS</p></header>
+    <section class="controls" aria-label="Soundboard controls"><input type="search" id="search-input" class="search-input" placeholder="SEARCH FOR SOUNDS..." aria-label="Search sounds" autocomplete="off"><p class="tip">↑ PRESS [S] TO SEARCH • CLICK TO PLAY ↑</p></section>
+    <section id="sounds-container" class="sounds-container" aria-label="Sound clips"><div class="loading">LOADING SOUNDS...</div></section>
+  </main>
+  <footer class="footer"><div class="footer-content">POWERED BY PWA SOUNDBOARD • OPEN SOURCE &amp; FREE TO USE</div><nav class="footer-links" aria-label="Links"><a class="footer-link" href="https://github.com/Deepinthots/soundboard-pwa" target="_blank" rel="noopener">📂 SOURCE CODE</a><a class="footer-link" href="https://github.com/Deepinthots/soundboard-pwa#readme" target="_blank" rel="noopener">📖 DOCUMENTATION</a></nav></footer>
+  <div id="status" class="status" role="status" aria-live="polite"></div>
+  <div id="offline-indicator" class="offline-indicator">OFFLINE — SOUNDS REQUIRE CONNECTION</div>
+  <script src="./main.js?v=20261022-fix1" defer></script>
+</body>
 </html>
