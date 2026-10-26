@@ -43,6 +43,7 @@
     'Pop Fart',
     'SarcastiBilly',
     'Soft Billy',
+    'THATS ALOTTA NUTS',
     'TIIIIOOOTTS',
     'Usual Suspects Billy',
     'Wet Fart',
