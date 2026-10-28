@@ -648,14 +648,19 @@ h1 {
 
 </div>
 
-<!-- Update checker and main.js loader -->
 
+<!-- The Archives: Update checker and main.js loader -->
 <script>
 (() => {
   'use strict';
 
-  const INTERVAL = 2 * 60 * 1000;
+  const CHECK_INTERVAL = 10 * 60 * 1000;
   const base = new URL('./', document.baseURI);
+
+  const API_URL =
+    'https://api.github.com/repos/' +
+    'Deepinthots/soundboard-pwa/' +
+    'contents/public/sounds?ref=main';
 
   const banner = document.getElementById(
     'archives-update-banner'
@@ -669,7 +674,8 @@ h1 {
     'archives-update-later'
   );
 
-  let baseline = null;
+  let loadedMainVersion = null;
+  let initialSoundVersion = null;
   let checking = false;
   let pendingVersion = null;
   let dismissedVersion = null;
@@ -684,6 +690,21 @@ h1 {
 
     return (value >>> 0).toString(16);
   }
+
+  // Normalize the HTML before comparing versions.
+  function htmlVersion(source) {
+    const doc = new DOMParser().parseFromString(
+      source,
+      'text/html'
+    );
+
+    return hash(doc.documentElement.outerHTML);
+  }
+
+  // Capture this page before main.js modifies it.
+  const loadedHTMLVersion = htmlVersion(
+    document.documentElement.outerHTML
+  );
 
   async function fetchFresh(filename) {
     const url = new URL(filename, base);
@@ -706,15 +727,99 @@ h1 {
     return response.text();
   }
 
-  async function getVersion() {
-    const [html, js] = await Promise.all([
-      fetchFresh('index.html'),
-      fetchFresh('main.js')
-    ]);
+  // Get the current MP3 filenames and file revisions.
+  async function getSoundVersion() {
+    const response = await fetch(API_URL, {
+      cache: 'no-store',
+      headers: {
+        Accept: 'application/vnd.github+json'
+      }
+    });
 
-    return hash(
-      html + '\n--ARCHIVES-MAIN--\n' + js
-    );
+    if (!response.ok) {
+      throw new Error(
+        'Sound-list check: HTTP ' + response.status
+      );
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data)) {
+      throw new Error(
+        'Unexpected GitHub sound-list response'
+      );
+    }
+
+    const files = data
+      .filter(item =>
+        item.type === 'file' &&
+        /\.mp3$/i.test(item.name)
+      )
+      .map(item => `${item.name}:${item.sha}`);
+
+    files.sort();
+
+    return hash(files.join('\n'));
+  }
+
+  function showUpdate(version) {
+    if (version === dismissedVersion) return;
+
+    pendingVersion = version;
+    banner.classList.add('show');
+  }
+
+  function hideUpdate() {
+    banner.classList.remove('show');
+  }
+
+  // Load main.js and remember its actual contents.
+  // This prevents comparing against an unrelated
+  // server version downloaded after startup.
+  async function loadSoundboard() {
+    try {
+      const source = await fetchFresh('main.js');
+
+      loadedMainVersion = hash(source);
+
+      const blob = new Blob(
+        [source],
+        { type: 'text/javascript' }
+      );
+
+      const scriptURL = URL.createObjectURL(blob);
+      const script = document.createElement('script');
+
+      script.src = scriptURL;
+
+      script.onload = () => {
+        URL.revokeObjectURL(scriptURL);
+      };
+
+      script.onerror = () => {
+        URL.revokeObjectURL(scriptURL);
+        console.error(
+          'The Archives: main.js could not start'
+        );
+      };
+
+      document.body.appendChild(script);
+
+    } catch (error) {
+      console.error(
+        'The Archives: unable to load main.js',
+        error
+      );
+
+      const container = document.getElementById(
+        'sounds-container'
+      );
+
+      if (container) {
+        container.textContent =
+          'Could not load sounds. Try refreshing.';
+      }
+    }
   }
 
   async function checkForUpdates() {
@@ -723,27 +828,61 @@ h1 {
     checking = true;
 
     try {
-      const version = await getVersion();
+      // Check website code.
+      const [html, js] = await Promise.all([
+        fetchFresh('index.html'),
+        fetchFresh('main.js')
+      ]);
 
-      // First successful check establishes the baseline.
-      if (baseline === null) {
-        baseline = version;
-        return;
+      const htmlChanged =
+        htmlVersion(html) !== loadedHTMLVersion;
+
+      const jsChanged =
+        loadedMainVersion !== null &&
+        hash(js) !== loadedMainVersion;
+
+      // Check MP3 changes separately so an API
+      // failure doesn't block code update detection.
+      let soundsChanged = false;
+
+      try {
+        const soundVersion = await getSoundVersion();
+
+        if (initialSoundVersion === null) {
+          initialSoundVersion = soundVersion;
+        } else {
+          soundsChanged =
+            soundVersion !== initialSoundVersion;
+        }
+
+      } catch (error) {
+        console.warn(
+          'Sound update check unavailable:',
+          error
+        );
       }
 
-      if (version === baseline) {
+      if (htmlChanged || jsChanged || soundsChanged) {
+        const version = [
+          hash(html),
+          hash(js),
+          initialSoundVersion || ''
+        ].join(':');
+
+        // Include a changed sound revision if present.
+        const updateKey = version + ':' +
+          (soundsChanged ? 'sounds-changed' : '');
+
+        showUpdate(updateKey);
+      } else {
         pendingVersion = null;
-        banner.classList.remove('show');
-
-      } else if (version !== dismissedVersion) {
-        pendingVersion = version;
-        banner.classList.add('show');
+        hideUpdate();
       }
 
-    } catch (err) {
+    } catch (error) {
       console.warn(
-        'Update check unavailable:',
-        err
+        'The Archives update check failed:',
+        error
       );
 
     } finally {
@@ -755,8 +894,9 @@ h1 {
     updateNow.disabled = true;
     updateNow.textContent = 'Updating...';
 
-    banner.classList.remove('show');
+    hideUpdate();
 
+    // Reload the latest document.
     const url = new URL(location.href);
 
     url.searchParams.set(
@@ -769,40 +909,20 @@ h1 {
 
   later.addEventListener('click', () => {
     dismissedVersion = pendingVersion;
-    banner.classList.remove('show');
+    hideUpdate();
   });
 
-  // Load main.js with a fresh URL on each visit.
-  const script = document.createElement('script');
+  // Start the soundboard first.
+  loadSoundboard();
 
-  const scriptURL = new URL('main.js', base);
-
-  scriptURL.searchParams.set(
-    '_archives_js',
-    String(Date.now())
-  );
-
-  script.src = scriptURL.href;
-  script.async = false;
-
-  script.onerror = () => {
-    const container = document.getElementById(
-      'sounds-container'
-    );
-
-    if (container) {
-      container.textContent =
-        'Could not load sounds. Try refreshing.';
-    }
-  };
-
-  document.body.appendChild(script);
-
+  // First check after the page has initialized.
+  // The initial directory snapshot becomes the
+  // reference for changes made while this tab is open.
   checkForUpdates();
 
   setInterval(
     checkForUpdates,
-    INTERVAL
+    CHECK_INTERVAL
   );
 
   window.addEventListener(
