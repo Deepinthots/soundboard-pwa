@@ -1,72 +1,28 @@
 
-/* The Archives — two playback modes; no NEW badges. */
+/*
+  The Archives
+  Automatic GitHub sound discovery
+  Pitch Only + Pitch and Speed
+*/
+
 (() => {
   'use strict';
 
-  const files = [
-    "5 Farter Death Punch",
-    "Adjusting",
-    "A Question, Billy",
-    "AH",
-    "AHHHH",
-    "Billy Fanfare",
-    "Billy Hum 1",
-    "Billy Hum 2",
-    "Billy Hum 3",
-    "Billy Laugh 1",
-    "Boner1",
-    "BOOM",
-    "Bully Maguire",
-    "Dagger Beers",
-    "Defeated Billy",
-    "DIP-PY",
-    "Downward Fart",
-    "Dry Mop",
-    "FAAAHH",
-    "Goat Ray",
-    "GOO!",
-    "HHHHHHHHUUUUUOOOO",
-    "HHHUUUOO",
-    "Humming Billy Laugh",
-    "HUO",
-    "Inflected Billy",
-    "JEW JEW",
-    "Jurrassic Lomo",
-    "L&O Extended",
-    "L&O DUN DUN",
-    "No but Yes",
-    "Oh",
-    "Oh Hey Look Deer",
-    "Peckham Laugh",
-    "PENQUITOS",
-    "PERFECT!",
-    "Pop Fart",
-    "SarcastiBilly",
-    "Soft Billy",
-    "THATS ALOTTA NUTS",
-    "TIIIIOOOTTS",
-    "Usual Suspects Billy",
-    "Wet Fart",
-    "Ya (boner!)",
-    "Yes but No",
-    "You're losing it, Billy",
-    "Yyyyeeaaaaaaah"
-  ];
+  const REPO_OWNER = 'Deepinthots';
+  const REPO_NAME = 'soundboard-pwa';
+  const SOUND_FOLDER = 'public/sounds';
+
+  const API_URL =
+    `https://api.github.com/repos/${REPO_OWNER}/` +
+    `${REPO_NAME}/contents/${SOUND_FOLDER}?ref=main`;
+
+  const SOUND_CACHE_KEY =
+    'the-archives-sound-list-v1';
 
   const root = new URL('./', document.baseURI);
-
-  const sounds = files.map(name => ({
-    name,
-    artist: 'Office',
-    url: new URL(
-      `public/sounds/${encodeURIComponent(name)}.mp3`,
-      root
-    ).href
-  }));
-
-  window.OFFICE_SOUNDS = sounds;
-
   const $ = id => document.getElementById(id);
+
+  let sounds = [];
 
   let mode = 'pitch';
   let position = 0;
@@ -78,7 +34,154 @@
   let sequence = 0;
   let statusTimer;
 
-  function notify(message) {
+  /*
+    SOUND DISCOVERY
+  */
+
+  function buildSound(filename) {
+    const name = filename.replace(/\.mp3$/i, '');
+
+    return {
+      name,
+      artist: 'Office',
+      url: new URL(
+        `public/sounds/${encodeURIComponent(filename)}`,
+        root
+      ).href
+    };
+  }
+
+  function getSavedSounds() {
+    try {
+      const saved = JSON.parse(
+        localStorage.getItem(SOUND_CACHE_KEY)
+      );
+
+      if (!Array.isArray(saved)) {
+        return [];
+      }
+
+      return saved
+        .filter(filename =>
+          typeof filename === 'string' &&
+          /\.mp3$/i.test(filename)
+        )
+        .map(buildSound);
+
+    } catch (error) {
+      console.warn(
+        'Unable to read saved sound list:',
+        error
+      );
+
+      return [];
+    }
+  }
+
+  function saveSounds(filenames) {
+    try {
+      localStorage.setItem(
+        SOUND_CACHE_KEY,
+        JSON.stringify(filenames)
+      );
+
+    } catch (error) {
+      console.warn(
+        'Unable to save sound list:',
+        error
+      );
+    }
+  }
+
+  async function discoverSounds() {
+    const response = await fetch(API_URL, {
+      cache: 'no-store',
+      headers: {
+        Accept: 'application/vnd.github+json'
+      }
+    });
+
+    if (!response.ok) {
+      throw new Error(
+        `GitHub API returned HTTP ${response.status}`
+      );
+    }
+
+    const data = await response.json();
+
+    if (!Array.isArray(data)) {
+      throw new Error(
+        'GitHub returned an unexpected folder listing'
+      );
+    }
+
+    const filenames = data
+      .filter(item =>
+        item.type === 'file' &&
+        typeof item.name === 'string' &&
+        /\.mp3$/i.test(item.name)
+      )
+      .map(item => item.name);
+
+    filenames.sort((a, b) =>
+      a.localeCompare(b, undefined, {
+        numeric: true,
+        sensitivity: 'base'
+      })
+    );
+
+    return filenames;
+  }
+
+  async function loadSoundList() {
+    // Show the saved collection immediately
+    // while checking GitHub for current files.
+    sounds = getSavedSounds();
+
+    window.OFFICE_SOUNDS = sounds;
+
+    render();
+
+    try {
+      const filenames = await discoverSounds();
+
+      sounds = filenames.map(buildSound);
+
+      window.OFFICE_SOUNDS = sounds;
+
+      // Replace the saved list only after
+      // successful discovery.
+      saveSounds(filenames);
+
+      render();
+
+      console.info(
+        `The Archives: loaded ${sounds.length} sounds`
+      );
+
+    } catch (error) {
+      console.warn(
+        'Automatic sound discovery failed:',
+        error
+      );
+
+      if (sounds.length === 0) {
+        showStatus(
+          'Could not load sound list. Check connection.'
+        );
+      } else {
+        console.info(
+          'Using previously saved sound list.'
+        );
+      }
+    }
+  }
+
+  /*
+    STATUS MESSAGES
+  */
+
+  function showStatus(message) {
     const el = $('status');
 
     if (!el) return;
@@ -93,69 +196,98 @@
     }, 5000);
   }
 
+  /*
+    PITCH SETTINGS
+  */
+
   function rateFromPosition(p) {
     return p <= 0
-      ? 1 + p / 100 * 0.5
-      : 1 + p / 100 * 2;
+      ? 1 + (p / 100) * 0.5
+      : 1 + (p / 100) * 2;
   }
 
   function semitonesFromPosition(p) {
     return Math.round(p * 12 / 100);
   }
 
+  /*
+    STOP PREVIOUS AUDIO
+  */
+
   function stopCurrent() {
     sequence++;
 
     if (activeAudio) {
-      activeAudio.pause();
-      activeAudio.removeAttribute('src');
-      activeAudio.load();
+      const audio = activeAudio;
       activeAudio = null;
+
+      audio.pause();
+      audio.removeAttribute('src');
+      audio.load();
     }
 
     if (activePlayer) {
-      try {
-        activePlayer.stop();
-      } catch (_) {}
-
-      activePlayer.dispose();
+      const player = activePlayer;
       activePlayer = null;
+
+      player.onstop = () => {};
+
+      try {
+        player.stop();
+      } catch (error) {
+        // Player may not have started yet.
+      }
+
+      player.dispose();
     }
 
     if (activeEffect) {
-      activeEffect.dispose();
+      const effect = activeEffect;
       activeEffect = null;
+
+      effect.dispose();
     }
   }
 
-  function setPosition(value) {
-    const n = Number(value);
+  /*
+    ADJUST THE SLIDER
+  */
 
-    if (!Number.isFinite(n)) return;
+  function setPosition(value) {
+    const parsed = Number(value);
+
+    if (!Number.isFinite(parsed)) {
+      return;
+    }
 
     position = Math.max(
       -100,
-      Math.min(100, Math.round(n))
+      Math.min(100, Math.round(parsed))
     );
 
-    if ($('pitch-slider')) {
-      $('pitch-slider').value = String(position);
+    const slider = $('pitch-slider');
+
+    if (slider) {
+      slider.value = String(position);
     }
 
     const display = $('pitch-value');
 
     if (display) {
       if (mode === 'pitch') {
-        const st = semitonesFromPosition(position);
+        const semitones =
+          semitonesFromPosition(position);
 
         display.textContent =
-          `${st > 0 ? '+' : ''}${st} st`;
+          `${semitones > 0 ? '+' : ''}${semitones} st`;
+
       } else {
         display.textContent =
           `${rateFromPosition(position).toFixed(2)}×`;
       }
     }
 
+    // Change currently playing audio.
     if (activeAudio) {
       activeAudio.playbackRate =
         rateFromPosition(position);
@@ -167,33 +299,40 @@
     }
   }
 
-  function setMode(next) {
-    if (next !== 'pitch' && next !== 'speed') {
+  /*
+    SWITCH PLAYBACK MODES
+  */
+
+  function setMode(nextMode) {
+    if (
+      nextMode !== 'pitch' &&
+      nextMode !== 'speed'
+    ) {
       return;
     }
 
+    // Fall back to native playback
+    // if Tone.js did not load.
     if (
-      next === 'pitch' &&
+      nextMode === 'pitch' &&
       (!window.Tone || !window.Tone.PitchShift)
     ) {
-      notify(
-        'Pitch-only processing is unavailable. Using Pitch + Speed.'
-      );
+      nextMode = 'speed';
 
-      next = 'speed';
+      showStatus(
+        'Pitch-only processing unavailable. Using Pitch + Speed.'
+      );
     }
 
-    if (mode !== next) {
+    if (mode !== nextMode) {
       stopCurrent();
     }
 
-    mode = next;
+    mode = nextMode;
 
-    for (
-      const button of document.querySelectorAll(
-        '[data-playback-mode]'
-      )
-    ) {
+    document.querySelectorAll(
+      '[data-playback-mode]'
+    ).forEach(button => {
       const selected =
         button.dataset.playbackMode === mode;
 
@@ -206,17 +345,18 @@
         'aria-pressed',
         String(selected)
       );
-    }
+    });
 
     const labels = $('pitch-labels');
 
-    if (labels) {
+    if (labels && labels.children.length >= 3) {
       labels.children[0].textContent =
         mode === 'pitch'
           ? '-12 st Deep'
           : '0.50× Slow';
 
-      labels.children[1].textContent = 'Normal';
+      labels.children[1].textContent =
+        'Normal';
 
       labels.children[2].textContent =
         mode === 'pitch'
@@ -227,27 +367,44 @@
     setPosition(0);
   }
 
+  /*
+    CREATE SOUND BUTTONS
+  */
+
   function render() {
     const container = $('sounds-container');
 
     if (!container) return;
 
-    const q = (
-      $('search-input')?.value || ''
+    const search = $('search-input');
+
+    const query = (
+      search?.value || ''
     ).trim().toLowerCase();
 
     const filtered = sounds.filter(sound =>
-      sound.name.toLowerCase().includes(q)
+      sound.name.toLowerCase().includes(query)
     );
 
-    if ($('sound-count')) {
-      $('sound-count').textContent =
-        String(sounds.length);
+    const count = $('sound-count');
+
+    if (count) {
+      count.textContent = String(sounds.length);
     }
 
     container.replaceChildren();
 
-    if (!filtered.length) {
+    if (sounds.length === 0) {
+      const loading = document.createElement('div');
+
+      loading.className = 'loading';
+      loading.textContent = 'Loading sounds...';
+
+      container.appendChild(loading);
+      return;
+    }
+
+    if (filtered.length === 0) {
       const empty = document.createElement('div');
 
       empty.className = 'loading';
@@ -264,10 +421,12 @@
       button.className = 'sound-button';
 
       const name = document.createElement('div');
+
       name.className = 'sound-name';
       name.textContent = sound.name;
 
       const artist = document.createElement('div');
+
       artist.className = 'sound-artist';
       artist.textContent = sound.artist;
 
@@ -282,12 +441,20 @@
     }
   }
 
+  /*
+    PLAY AUDIO
+  */
+
   async function play(sound) {
     stopCurrent();
 
     const thisSequence = sequence;
 
-    // Original pitch + speed mode.
+    /*
+      MODE 1: PITCH + SPEED
+      Uses native browser audio.
+    */
+
     if (mode === 'speed') {
       const audio = new Audio(sound.url);
 
@@ -310,9 +477,11 @@
 
       audio.addEventListener('error', () => {
         if (activeAudio === audio) {
-          notify(`Could not load: ${sound.name}`);
+          showStatus(
+            `Could not load: ${sound.name}`
+          );
         }
-      });
+      }, { once: true });
 
       audio.addEventListener('ended', () => {
         if (activeAudio === audio) {
@@ -322,99 +491,154 @@
 
       try {
         await audio.play();
+
       } catch (error) {
-        if (thisSequence !== sequence) return;
+        if (thisSequence !== sequence) {
+          return;
+        }
 
         console.error(
-          'Sound playback error',
+          'Playback error:',
           sound.url,
           error
         );
 
-        notify(`Could not play: ${sound.name}`);
+        showStatus(
+          `Could not play: ${sound.name}`
+        );
+
+        activeAudio = null;
       }
 
       return;
     }
 
-    // True pitch-only mode, powered by Tone.js.
+    /*
+      MODE 2: PITCH ONLY
+      Preserves playback duration.
+
+      Uses browser fetch and decoding
+      instead of Tone.Player.load(url).
+
+      This prevents the double-encoding
+      errors we fixed previously.
+    */
+
+    let pendingEffect = null;
+    let pendingPlayer = null;
+
     try {
-      if (!window.Tone || !Tone.PitchShift) {
-        notify(
-          'Pitch-only library unavailable. Select Pitch + Speed.'
+      if (
+        !window.Tone ||
+        !window.Tone.PitchShift
+      ) {
+        showStatus(
+          'Pitch-only library unavailable.'
         );
 
         return;
       }
 
-      // Unlock browser audio after the user clicks.
       await Tone.start();
 
-      if (thisSequence !== sequence) return;
+      if (thisSequence !== sequence) {
+        return;
+      }
+
+      // Download through the browser.
+      // Tone.js never processes the URL.
+      const response = await fetch(sound.url);
+
+      if (!response.ok) {
+        throw new Error(
+          `HTTP ${response.status}: ${sound.url}`
+        );
+      }
+
+      const audioData = await response.arrayBuffer();
+
+      if (thisSequence !== sequence) {
+        return;
+      }
+
+      // Decode the actual MP3 bytes.
+      const decodedAudio =
+        await Tone.getContext().decodeAudioData(
+          audioData
+        );
+
+      if (thisSequence !== sequence) {
+        return;
+      }
 
       const effect = new Tone.PitchShift({
         pitch: semitonesFromPosition(position),
         wet: 1
       }).toDestination();
 
+      pendingEffect = effect;
       activeEffect = effect;
 
-   
-const response = await fetch(sound.url);
+      const player = new Tone.Player(decodedAudio);
 
-if (!response.ok) {
-  throw new Error(
-    `HTTP ${response.status}: ${sound.url}`
-  );
-}
+      pendingPlayer = player;
+      activePlayer = player;
 
-const audioData = await response.arrayBuffer();
-
-if (thisSequence !== sequence) return;
-
-// Decode the MP3 using the browser's audio decoder.
-const decodedAudio = await Tone.getContext()
-  .decodeAudioData(audioData);
-
-if (thisSequence !== sequence) return;
-
-// Pass decoded audio directly to Tone.js.
-// This avoids Tone.js encoding the URL again.
-const player = new Tone.Player(decodedAudio);
-
-activePlayer = player;
-player.connect(effect);
-
-player.start();
-
+      player.connect(effect);
 
       player.onstop = () => {
-        if (activePlayer !== player) return;
+        if (activePlayer !== player) {
+          return;
+        }
 
         activePlayer = null;
         activeEffect = null;
 
-        // Let the effect finish naturally.
+        // Allow a short tail before cleanup.
         setTimeout(() => {
           player.dispose();
           effect.dispose();
         }, 350);
       };
 
+      player.start();
+
     } catch (error) {
-      if (thisSequence !== sequence) return;
+      if (thisSequence !== sequence) {
+        if (
+          pendingPlayer &&
+          pendingPlayer !== activePlayer
+        ) {
+          pendingPlayer.dispose();
+        }
+
+        if (
+          pendingEffect &&
+          pendingEffect !== activeEffect
+        ) {
+          pendingEffect.dispose();
+        }
+
+        return;
+      }
 
       console.error(
-        'Pitch-only playback error',
+        'Pitch-only playback error:',
         sound.url,
         error
       );
 
-      notify(`Could not play: ${sound.name}`);
+      showStatus(
+        `Could not play: ${sound.name}`
+      );
 
       stopCurrent();
     }
   }
+
+  /*
+    INITIALIZE THE ARCHIVES
+  */
 
   function init() {
     document.title = 'The Archives';
@@ -439,10 +663,13 @@ player.start();
     ).forEach(button => {
       button.addEventListener(
         'click',
-        () => setMode(button.dataset.playbackMode)
+        () => setMode(
+          button.dataset.playbackMode
+        )
       );
     });
 
+    // Press S to focus the search box.
     document.addEventListener(
       'keydown',
       event => {
@@ -472,7 +699,10 @@ player.start();
 
     window.addEventListener(
       'online',
-      syncConnection
+      () => {
+        syncConnection();
+        loadSoundList();
+      }
     );
 
     window.addEventListener(
@@ -481,22 +711,30 @@ player.start();
     );
 
     syncConnection();
-    render();
 
+    // Initialize the selected playback mode.
     setMode('pitch');
 
-    // Retain current online-only behavior.
+    // Discover MP3s automatically.
+    loadSoundList();
+
+    // Keep existing online-only behavior.
     // Offline caching will be handled later.
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.getRegistrations()
-        .then(regs => {
-          for (const reg of regs) {
-            if (reg.scope.startsWith(root.href)) {
-              reg.unregister();
+        .then(registrations => {
+          for (const registration of registrations) {
+            if (registration.scope.startsWith(root.href)) {
+              registration.unregister();
             }
           }
         })
-        .catch(console.warn);
+        .catch(error => {
+          console.warn(
+            'Service worker cleanup failed:',
+            error
+          );
+        });
     }
   }
 
