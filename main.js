@@ -202,7 +202,7 @@
 
   function rateFromPosition(p) {
     return p <= 0
-      ? 1 + (p / 100) * 0.5
+      ? 1 + (p / 100) * 0.75
       : 1 + (p / 100) * 2;
   }
 
@@ -353,7 +353,7 @@
       labels.children[0].textContent =
         mode === 'pitch'
           ? '-12 st Deep'
-          : '0.50× Slow';
+          : '0.25× Slow';
 
       labels.children[1].textContent =
         'Normal';
