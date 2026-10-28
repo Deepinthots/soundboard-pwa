@@ -288,10 +288,10 @@
     }
 
     // Change currently playing audio.
-    if (activeAudio) {
+    if (activeAudio && mode === 'speed') {
       activeAudio.playbackRate =
-        rateFromPosition(position);
-    }
+    rateFromPosition(position);
+}
 
     if (activeEffect) {
       activeEffect.pitch =
@@ -524,116 +524,74 @@
       errors we fixed previously.
     */
 
-    let pendingEffect = null;
-    let pendingPlayer = null;
 
-    try {
-      if (
-        !window.Tone ||
-        !window.Tone.PitchShift
-      ) {
-        showStatus(
-          'Pitch-only library unavailable.'
-        );
+try {
+  if (!window.Tone || !Tone.PitchShift) {
+    showStatus('Pitch-only library unavailable.');
+    return;
+  }
 
-        return;
-      }
+  await Tone.start();
 
-      await Tone.start();
+  if (thisSequence !== sequence) return;
 
-      if (thisSequence !== sequence) {
-        return;
-      }
+  // Use the browser's MP3 player rather than
+  // decodeAudioData(), which fails on some files.
+  const audio = new Audio();
 
-      // Download through the browser.
-      // Tone.js never processes the URL.
-      const response = await fetch(sound.url);
+  audio.preload = 'auto';
+  audio.crossOrigin = 'anonymous';
+  audio.src = sound.url;
+  audio.playbackRate = 1;
+  audio.preservesPitch = true;
 
-      if (!response.ok) {
-        throw new Error(
-          `HTTP ${response.status}: ${sound.url}`
-        );
-      }
+  activeAudio = audio;
 
-      const audioData = await response.arrayBuffer();
+  // Create the pitch-shifting effect.
+  const effect = new Tone.PitchShift({
+    pitch: semitonesFromPosition(position),
+    wet: 1
+  }).toDestination();
 
-      if (thisSequence !== sequence) {
-        return;
-      }
+  activeEffect = effect;
 
-      // Decode the actual MP3 bytes.
-      const decodedAudio =
-        await Tone.getContext().decodeAudioData(
-          audioData
-        );
+  // Route the browser's audio playback
+  // through Tone.js.
+  const source = Tone.getContext()
+    .rawContext.createMediaElementSource(audio);
 
-      if (thisSequence !== sequence) {
-        return;
-      }
+  Tone.connect(source, effect);
 
-      const effect = new Tone.PitchShift({
-        pitch: semitonesFromPosition(position),
-        wet: 1
-      }).toDestination();
+  audio.addEventListener('ended', () => {
+    if (activeAudio !== audio) return;
 
-      pendingEffect = effect;
-      activeEffect = effect;
+    activeAudio = null;
+    activeEffect = null;
 
-      const player = new Tone.Player(decodedAudio);
+    source.disconnect();
 
-      pendingPlayer = player;
-      activePlayer = player;
+    setTimeout(() => {
+      effect.dispose();
+    }, 350);
 
-      player.connect(effect);
+  }, { once: true });
 
-      player.onstop = () => {
-        if (activePlayer !== player) {
-          return;
-        }
+  await audio.play();
 
-        activePlayer = null;
-        activeEffect = null;
+} catch (error) {
+  if (thisSequence !== sequence) return;
 
-        // Allow a short tail before cleanup.
-        setTimeout(() => {
-          player.dispose();
-          effect.dispose();
-        }, 350);
-      };
+  console.error(
+    'Pitch-only playback error:',
+    sound.url,
+    error
+  );
 
-      player.start();
+  showStatus(`Could not play: ${sound.name}`);
 
-    } catch (error) {
-      if (thisSequence !== sequence) {
-        if (
-          pendingPlayer &&
-          pendingPlayer !== activePlayer
-        ) {
-          pendingPlayer.dispose();
-        }
+  stopCurrent();
+}
 
-        if (
-          pendingEffect &&
-          pendingEffect !== activeEffect
-        ) {
-          pendingEffect.dispose();
-        }
-
-        return;
-      }
-
-      console.error(
-        'Pitch-only playback error:',
-        sound.url,
-        error
-      );
-
-      showStatus(
-        `Could not play: ${sound.name}`
-      );
-
-      stopCurrent();
-    }
   }
 
   /*
