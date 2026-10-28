@@ -37,7 +37,6 @@ body {
 }
 
 main {
-  width: 100%;
   max-width: 1600px;
   margin: auto;
   padding: 28px 12px 40px;
@@ -52,8 +51,7 @@ h1 {
   margin: 0 0 5px;
   font-size: clamp(1.65rem, 3vw, 2.2rem);
   font-weight: 650;
-  letter-spacing: -0.7px;
-  line-height: 1.25;
+  letter-spacing: -.7px;
 }
 
 .subtitle {
@@ -103,6 +101,34 @@ h1 {
   margin: 16px 0 0;
 }
 
+.mode-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 15px;
+}
+
+.mode-button {
+  flex: 1;
+  padding: 10px 12px;
+  border-radius: 7px;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: #191e1b;
+  font: inherit;
+  font-size: .82rem;
+  cursor: pointer;
+}
+
+.mode-button.selected {
+  border-color: var(--accent);
+  background: #203328;
+  color: var(--text);
+}
+
+.mode-button:hover {
+  border-color: var(--accent-light);
+}
+
 .pitch-header {
   display: flex;
   justify-content: space-between;
@@ -131,7 +157,7 @@ h1 {
 .pitch-value {
   font-size: .9rem;
   font-weight: 600;
-  min-width: 52px;
+  min-width: 56px;
   text-align: right;
   font-variant-numeric: tabular-nums;
 }
@@ -176,7 +202,7 @@ h1 {
 .sounds-container {
   display: grid;
   grid-template-columns:
-    repeat(auto-fill, minmax(min(190px, 100%), 1fr));
+    repeat(auto-fill, minmax(min(190px,100%),1fr));
   gap: 8px;
 }
 
@@ -216,14 +242,6 @@ h1 {
   transform: translateY(0);
 }
 
-.sound-button:focus-visible,
-.pitch-reset:focus-visible,
-.update-now:focus-visible,
-.update-later:focus-visible {
-  outline: 2px solid var(--accent-light);
-  outline-offset: 2px;
-}
-
 .sound-button::after {
   content: "▶";
   position: absolute;
@@ -231,6 +249,15 @@ h1 {
   bottom: 12px;
   color: var(--accent-light);
   font-size: 12px;
+}
+
+.sound-button:focus-visible,
+.pitch-reset:focus-visible,
+.mode-button:focus-visible,
+.update-now:focus-visible,
+.update-later:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
 }
 
 .sound-name {
@@ -252,14 +279,14 @@ h1 {
   text-align: center;
 }
 
-/* Status and offline messages */
+/* Status messages */
 
 .status {
   position: fixed;
   top: 16px;
   right: 16px;
   z-index: 100;
-  max-width: min(400px, calc(100vw - 32px));
+  max-width: min(400px,calc(100vw - 32px));
   padding: 14px 16px;
   border: 1px solid var(--danger);
   border-radius: 9px;
@@ -273,10 +300,6 @@ h1 {
 
 .status.show {
   opacity: 1;
-}
-
-.status.success {
-  border-color: var(--accent-light);
 }
 
 .offline-indicator {
@@ -296,6 +319,35 @@ h1 {
   display: block;
 }
 
+/* Footer */
+
+.footer {
+  max-width: 1600px;
+  margin: auto;
+  padding: 18px 12px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.footer-content {
+  color: var(--muted);
+  font-size: .78rem;
+}
+
+.footer-link {
+  color: var(--accent-light);
+  text-decoration: none;
+  font-size: .8rem;
+}
+
+.footer-link:hover {
+  text-decoration: underline;
+}
+
 /* Update notification */
 
 .update-banner {
@@ -304,7 +356,7 @@ h1 {
   bottom: 18px;
   right: 18px;
   z-index: 9999;
-  width: min(350px, calc(100vw - 36px));
+  width: min(350px,calc(100vw - 36px));
   padding: 18px;
   border: 1px solid var(--accent);
   border-radius: 11px;
@@ -355,35 +407,6 @@ h1 {
   cursor: wait;
 }
 
-/* Footer */
-
-.footer {
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: 18px 12px;
-  border-top: 1px solid var(--border);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  flex-wrap: wrap;
-}
-
-.footer-content {
-  color: var(--muted);
-  font-size: .78rem;
-}
-
-.footer-link {
-  color: var(--accent-light);
-  text-decoration: none;
-  font-size: .8rem;
-}
-
-.footer-link:hover {
-  text-decoration: underline;
-}
-
 /* Mobile layout */
 
 @media (max-width: 600px) {
@@ -393,7 +416,7 @@ h1 {
 
   .sounds-container {
     grid-template-columns:
-      repeat(2, minmax(0, 1fr));
+      repeat(2,minmax(0,1fr));
     gap: 8px;
   }
 
@@ -431,6 +454,10 @@ h1 {
   }
 }
 </style>
+
+<!-- Tone.js for pitch shifting without changing speed -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/tone/14.8.49/Tone.js"></script>
+
 </head>
 
 <body>
@@ -444,8 +471,10 @@ h1 {
     </p>
   </header>
 
-  <section class="controls"
-           aria-label="Soundboard controls">
+  <section
+    class="controls"
+    aria-label="Soundboard controls"
+  >
 
     <input
       id="search-input"
@@ -460,10 +489,36 @@ h1 {
 
     <div class="pitch-panel">
 
+      <div
+        class="mode-row"
+        role="group"
+        aria-label="Playback mode"
+      >
+        <button
+          class="mode-button selected"
+          data-playback-mode="pitch"
+          type="button"
+          aria-pressed="true"
+        >
+          Pitch only
+        </button>
+
+        <button
+          class="mode-button"
+          data-playback-mode="speed"
+          type="button"
+          aria-pressed="false"
+        >
+          Pitch + Speed
+        </button>
+      </div>
+
       <div class="pitch-header">
 
-        <label class="pitch-title"
-               for="pitch-slider">
+        <label
+          class="pitch-title"
+          for="pitch-slider"
+        >
           Pitch
         </label>
 
@@ -473,32 +528,38 @@ h1 {
             id="pitch-value"
             class="pitch-value"
             for="pitch-slider"
-          >1.00×</output>
+          >0 st</output>
 
           <button
             id="pitch-reset"
             class="pitch-reset"
             type="button"
-          >Reset</button>
+          >
+            Reset
+          </button>
 
         </div>
+
       </div>
 
       <input
-        type="range"
         id="pitch-slider"
         class="pitch-slider"
+        type="range"
         min="-100"
         max="100"
         step="1"
         value="0"
-        aria-label="Pitch and playback speed"
+        aria-label="Pitch adjustment"
       >
 
-      <div class="pitch-labels">
-        <span>0.50× Deep / Slow</span>
-        <span>1.00× Normal</span>
-        <span>3.00× High / Fast</span>
+      <div
+        class="pitch-labels"
+        id="pitch-labels"
+      >
+        <span>-12 st Deep</span>
+        <span>Normal</span>
+        <span>+12 st High</span>
       </div>
 
     </div>
@@ -527,7 +588,9 @@ h1 {
       href="https://github.com/Deepinthots/soundboard-pwa"
       target="_blank"
       rel="noopener noreferrer"
-    >GitHub</a>
+    >
+      GitHub
+    </a>
   </nav>
 
 </footer>
@@ -546,7 +609,7 @@ h1 {
   Offline — sounds require a connection
 </div>
 
-<!-- Update notification -->
+<!-- Automatic update notification -->
 
 <div
   id="archives-update-banner"
@@ -585,14 +648,13 @@ h1 {
 
 </div>
 
-<!-- Automatic update checker and soundboard loader -->
+<!-- Update checker and main.js loader -->
 
 <script>
 (() => {
   'use strict';
 
   const INTERVAL = 2 * 60 * 1000;
-
   const base = new URL('./', document.baseURI);
 
   const banner = document.getElementById(
@@ -612,7 +674,6 @@ h1 {
   let pendingVersion = null;
   let dismissedVersion = null;
 
-  // Create a fingerprint for the published files.
   function hash(text) {
     let value = 2166136261;
 
@@ -624,7 +685,6 @@ h1 {
     return (value >>> 0).toString(16);
   }
 
-  // Fetch files while bypassing ordinary HTTP caching.
   async function fetchFresh(filename) {
     const url = new URL(filename, base);
 
@@ -646,7 +706,6 @@ h1 {
     return response.text();
   }
 
-  // Compare index.html and main.js together.
   async function getVersion() {
     const [html, js] = await Promise.all([
       fetchFresh('index.html'),
@@ -658,23 +717,15 @@ h1 {
     );
   }
 
-  function hideNotice() {
-    banner.classList.remove('show');
-  }
-
-  // Check for published updates.
   async function checkForUpdates() {
-    if (checking || !navigator.onLine) {
-      return;
-    }
+    if (checking || !navigator.onLine) return;
 
     checking = true;
 
     try {
       const version = await getVersion();
 
-      // The first successful check establishes
-      // the current published version.
+      // First successful check establishes the baseline.
       if (baseline === null) {
         baseline = version;
         return;
@@ -682,7 +733,7 @@ h1 {
 
       if (version === baseline) {
         pendingVersion = null;
-        hideNotice();
+        banner.classList.remove('show');
 
       } else if (version !== dismissedVersion) {
         pendingVersion = version;
@@ -700,15 +751,12 @@ h1 {
     }
   }
 
-  // Update button.
   updateNow.addEventListener('click', () => {
     updateNow.disabled = true;
     updateNow.textContent = 'Updating...';
 
-    // Close the notification immediately.
-    hideNotice();
+    banner.classList.remove('show');
 
-    // Request a fresh HTML document.
     const url = new URL(location.href);
 
     url.searchParams.set(
@@ -719,13 +767,12 @@ h1 {
     location.replace(url.href);
   });
 
-  // Dismiss only the currently detected update.
   later.addEventListener('click', () => {
     dismissedVersion = pendingVersion;
-    hideNotice();
+    banner.classList.remove('show');
   });
 
-  // Load main.js using a fresh URL.
+  // Load main.js with a fresh URL on each visit.
   const script = document.createElement('script');
 
   const scriptURL = new URL('main.js', base);
@@ -751,19 +798,18 @@ h1 {
 
   document.body.appendChild(script);
 
-  // Start update checks.
   checkForUpdates();
 
-  // Check every 2 minutes.
-  setInterval(checkForUpdates, INTERVAL);
+  setInterval(
+    checkForUpdates,
+    INTERVAL
+  );
 
-  // Check when internet connectivity returns.
   window.addEventListener(
     'online',
     checkForUpdates
   );
 
-  // Check when returning to the browser tab.
   document.addEventListener(
     'visibilitychange',
     () => {
