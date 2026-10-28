@@ -364,7 +364,9 @@
       activePlayer = player;
       player.connect(effect);
 
-      await player.load(sound.url);
+     await player.load(
+  `${root.href}public/sounds/${sound.name}.mp3`
+);
 
       if (thisSequence !== sequence) return;
 
