@@ -359,18 +359,34 @@
 
       activeEffect = effect;
 
-      const player = new Tone.Player();
+   
+const response = await fetch(sound.url);
 
-      activePlayer = player;
-      player.connect(effect);
+if (!response.ok) {
+  throw new Error(
+    `HTTP ${response.status}: ${sound.url}`
+  );
+}
 
-     await player.load(
-  `${root.href}public/sounds/${sound.name}.mp3`
-);
+const audioData = await response.arrayBuffer();
 
-      if (thisSequence !== sequence) return;
+if (thisSequence !== sequence) return;
 
-      player.start();
+// Decode the MP3 using the browser's audio decoder.
+const decodedAudio = await Tone.getContext()
+  .decodeAudioData(audioData);
+
+if (thisSequence !== sequence) return;
+
+// Pass decoded audio directly to Tone.js.
+// This avoids Tone.js encoding the URL again.
+const player = new Tone.Player(decodedAudio);
+
+activePlayer = player;
+player.connect(effect);
+
+player.start();
+
 
       player.onstop = () => {
         if (activePlayer !== player) return;
