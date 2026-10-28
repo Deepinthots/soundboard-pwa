@@ -692,14 +692,37 @@ h1 {
   }
 
   // Normalize the HTML before comparing versions.
-  function htmlVersion(source) {
-    const doc = new DOMParser().parseFromString(
-      source,
-      'text/html'
-    );
 
-    return hash(doc.documentElement.outerHTML);
-  }
+function htmlVersion(source) {
+  const doc = new DOMParser().parseFromString(
+    source,
+    'text/html'
+  );
+
+  // Compare stable page content, not the
+  // entire DOM that JavaScript can modify.
+  const styles = [...doc.querySelectorAll('style')]
+    .map(el => el.textContent)
+    .join('\n');
+
+  const scripts = [...doc.querySelectorAll(
+    'script:not([src])'
+  )]
+    .map(el => el.textContent)
+    .join('\n');
+
+  const main = doc.querySelector('main')?.innerHTML || '';
+  const footer = doc.querySelector('footer')?.innerHTML || '';
+
+  return hash([
+    doc.title,
+    styles,
+    scripts,
+    main,
+    footer
+  ].join('\n---\n'));
+}
+
 
   // Capture this page before main.js modifies it.
   const loadedHTMLVersion = htmlVersion(
