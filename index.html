@@ -643,6 +643,25 @@ h1 {
 }
 .reverb-labels { margin-top: 8px; }
 
+
+/* Site-wide anonymous usage report (opened with ?stats=1) */
+.archives-stats { margin: 0 0 18px; padding: 16px; border: 1px solid var(--border); background: var(--panel); border-radius: 9px; }
+.archives-stats[hidden] { display: none !important; }
+.stats-heading { display:flex; justify-content:space-between; gap:12px; align-items:flex-start; flex-wrap:wrap; margin-bottom:12px; }
+.stats-heading h2 { margin:0 0 5px; font-size:1rem; }
+.stats-heading p { margin:0; font-size:.76rem; color:var(--muted); }
+.stats-actions { display:flex; flex-wrap:wrap; gap:7px; }
+.stats-actions button, .stats-actions select { border:1px solid var(--border); border-radius:7px; padding:8px 10px; color:var(--text); background:#1c2420; font:inherit; font-size:.78rem; cursor:pointer; }
+.stats-actions button:hover { border-color:var(--accent-light); }
+.stats-summary { margin:8px 0 13px; font-size:.82rem; color:var(--muted); }
+.stats-table-wrap { max-height:380px; overflow:auto; border:1px solid var(--border); border-radius:7px; }
+.stats-table { width:100%; border-collapse:collapse; font-size:.82rem; }
+.stats-table th, .stats-table td { text-align:left; padding:9px 11px; border-bottom:1px solid var(--border); }
+.stats-table th { position:sticky; top:0; background:#19221d; color:var(--muted); }
+.stats-table td:last-child, .stats-table th:last-child { text-align:right; font-variant-numeric:tabular-nums; }
+.stats-table tr:last-child td { border-bottom:0; }
+.stats-table tr:hover td { background:var(--hover); }
+.stats-note { margin:11px 0 0; color:var(--muted); font-size:.72rem; }
 </style>
 
 <!-- Tone.js for pitch shifting without changing speed -->
@@ -794,6 +813,34 @@ h1 {
   </section>
     </div>
 
+  </section>
+
+  <!-- Site-wide anonymous stats: available at /soundboard-pwa/?stats=1 -->
+  <section id="archives-stats" class="archives-stats" hidden aria-label="Site-wide sound statistics">
+    <div class="stats-heading">
+      <div>
+        <h2>Sound Statistics</h2>
+        <p>Anonymous plays across all visitors</p>
+      </div>
+      <div class="stats-actions">
+        <select id="stats-sort" aria-label="Sort sounds by plays">
+          <option value="least">Least played first</option>
+          <option value="most">Most played first</option>
+          <option value="name">Name A–Z</option>
+        </select>
+        <button type="button" id="stats-export">Export CSV</button>
+        <button type="button" id="stats-refresh">Refresh totals</button>
+        <button type="button" id="stats-close">Close</button>
+      </div>
+    </div>
+    <div id="stats-summary" class="stats-summary"></div>
+    <div class="stats-table-wrap">
+      <table class="stats-table">
+        <thead><tr><th>Sound</th><th>Plays</th></tr></thead>
+        <tbody id="stats-rows"></tbody>
+      </table>
+    </div>
+    <p class="stats-note">These are shared totals from Google Sheets, including regular clicks and numpad plays by all visitors. Updates are not instantaneous. Unplayed sounds appear as zero. Anonymous requests can be blocked or inflated; use counts as an approximate popularity measure.</p>
   </section>
 
   <section

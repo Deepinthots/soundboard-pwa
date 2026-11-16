@@ -45,6 +45,185 @@
   let statusTimer;
 
   /*
+    SITE-WIDE ANONYMOUS PLAY COUNTS
+    Configure once by pasting your Apps Script /exec URL below.
+    Works with regular sound buttons and numpad playback.
+  */
+  const STATS_API_URL = 'https://script.google.com/macros/s/AKfycbwqfMnwwdO4mRRa8ud1GtgHwkSsyfZdGXBBtQNAQJf5pAX2LHnuknW7pYScDjmUOruO/exec';
+  const statsConfigured = /^https:\/\/script\.google\.com\/macros\/s\/[^/]+\/exec$/.test(STATS_API_URL);
+  let sharedPlayCounts = {};
+  let statsLoaded = false;
+  let statsLoading = false;
+  let statsRequestNumber = 0;
+
+  // Submitting a POST with no-cors is required because Google Apps Script
+  // does not provide CORS response headers. The opaque response cannot
+  // confirm that Sheets actually saved the play. Check the sheet to verify.
+  function recordPlay(sound) {
+    if (!statsConfigured) return;
+    const eventId = typeof crypto !== 'undefined' && crypto.randomUUID
+      ? crypto.randomUUID()
+      : `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+
+    fetch(STATS_API_URL, {
+      method: 'POST',
+      mode: 'no-cors',
+      keepalive: true,
+      headers: { 'Content-Type': 'text/plain;charset=UTF-8' },
+      body: JSON.stringify({ sound: sound.name, eventId })
+    }).catch(error => {
+      console.warn('Anonymous play event could not be sent:', error);
+    });
+  }
+
+  function currentStats() {
+    const records = sounds.map(sound => ({
+      name: sound.name,
+      plays: sharedPlayCounts[sound.name] || 0
+    }));
+    // Also expose any deleted sounds that had previous plays.
+    for (const [name, plays] of Object.entries(sharedPlayCounts)) {
+      if (!records.some(item => item.name === name)) {
+        records.push({ name, plays, removed: true });
+      }
+    }
+    const sort = $('stats-sort')?.value || 'least';
+    records.sort((a, b) => {
+      if (sort === 'name') return a.name.localeCompare(b.name);
+      const difference = sort === 'most' ? b.plays - a.plays : a.plays - b.plays;
+      return difference || a.name.localeCompare(b.name);
+    });
+    return records;
+  }
+
+  function renderStats() {
+    const panel = $('archives-stats');
+    if (!panel || panel.hidden) return;
+    const summary = $('stats-summary');
+    if (!statsConfigured) {
+      summary.textContent = 'Setup required: paste your Google Apps Script /exec URL into main.js.';
+      $('stats-rows').replaceChildren();
+      return;
+    }
+    if (statsLoading && !statsLoaded) {
+      summary.textContent = 'Loading shared play counts…';
+      return;
+    }
+    if (!statsLoaded) {
+      summary.textContent = 'Could not load shared play counts. Use Refresh to try again.';
+      return;
+    }
+    const records = currentStats();
+    const total = records.reduce((sum, item) => sum + item.plays, 0);
+    const current = records.filter(item => !item.removed);
+    const unused = current.filter(item => item.plays === 0).length;
+    summary.textContent =
+      `${total.toLocaleString()} plays across all visitors · ${current.length} current sounds · ${unused} never played`;
+    const body = $('stats-rows');
+    body.replaceChildren();
+    for (const item of records) {
+      const row = document.createElement('tr');
+      const name = document.createElement('td');
+      const plays = document.createElement('td');
+      name.textContent = item.name + (item.removed ? ' (removed)' : '');
+      plays.textContent = String(item.plays);
+      row.append(name, plays);
+      body.appendChild(row);
+    }
+  }
+
+  function exportStatsCSV() {
+    if (!statsLoaded) {
+      showStatus('Load the shared statistics before exporting.');
+      return;
+    }
+    const escapeCell = value => {
+      let text = String(value);
+      // Prevent names from being interpreted as spreadsheet formulas.
+      if (/^\s*[=+\-@]/.test(text)) text = "'" + text;
+      return '"' + text.replace(/"/g, '""') + '"';
+    };
+    const rows = [['Sound', 'Plays'], ...currentStats().map(item => [item.name, item.plays])];
+    const csv = '\uFEFF' + rows.map(row => row.map(escapeCell).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'the-archives-sitewide-play-counts.csv';
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
+
+  // Google ContentService JSON is cross-origin, so use its documented
+  // read-only JSONP mechanism. The callback is a fixed, validated name.
+  function loadSharedStats() {
+    if (!statsConfigured || statsLoading) {
+      renderStats();
+      return;
+    }
+    statsLoading = true;
+    renderStats();
+    const requestNumber = ++statsRequestNumber;
+    const callbackName = '__archivesStatsCallback_' + requestNumber;
+    const script = document.createElement('script');
+    const url = new URL(STATS_API_URL);
+    url.searchParams.set('prefix', callbackName);
+    url.searchParams.set('_t', String(Date.now()));
+    let finished = false;
+    let timeout;
+
+    function finish(ok) {
+      if (finished) return;
+      finished = true;
+      clearTimeout(timeout);
+      script.remove();
+      delete window[callbackName];
+      statsLoading = false;
+      if (!ok) console.warn('Could not retrieve shared statistics from Apps Script.');
+      renderStats();
+    }
+
+    window[callbackName] = response => {
+      if (!response || response.ok !== true || !Array.isArray(response.sounds)) {
+        finish(false);
+        return;
+      }
+      const counts = {};
+      for (const entry of response.sounds) {
+        if (typeof entry.name === 'string' && Number.isSafeInteger(entry.plays) && entry.plays >= 0) {
+          counts[entry.name] = entry.plays;
+        }
+      }
+      sharedPlayCounts = counts;
+      statsLoaded = true;
+      finish(true);
+    };
+
+    script.onerror = () => finish(false);
+    timeout = setTimeout(() => finish(false), 15000);
+    script.src = url.href;
+    document.head.appendChild(script);
+  }
+
+  function initStats() {
+    const panel = $('archives-stats');
+    if (!panel) return;
+    panel.hidden = new URLSearchParams(location.search).get('stats') !== '1';
+    if (panel.hidden) return;
+    $('stats-sort')?.addEventListener('change', renderStats);
+    $('stats-export')?.addEventListener('click', exportStatsCSV);
+    $('stats-refresh')?.addEventListener('click', loadSharedStats);
+    $('stats-close')?.addEventListener('click', () => {
+      panel.hidden = true;
+      const url = new URL(location.href);
+      url.searchParams.delete('stats');
+      history.replaceState(null, '', url.href);
+    });
+    loadSharedStats();
+  }
+
+  /*
     SOUND DISCOVERY
   */
 
@@ -164,6 +343,7 @@
       saveSounds(filenames);
 
       render();
+      renderStats();
 
       console.info(
         `The Archives: loaded ${sounds.length} sounds`
@@ -658,6 +838,7 @@
 
     container.replaceChildren();
     renderNumpad();
+    renderStats();
 
     if (sounds.length === 0) {
       const loading = document.createElement('div');
@@ -771,6 +952,8 @@
       }, { once: true });
 
       await audio.play();
+      // Count only a successful play, not missing or failed MP3s.
+      if (thisSequence === sequence) recordPlay(sound);
     } catch (error) {
       if (thisSequence !== sequence) {
         if (audio && activeAudio !== audio) {
@@ -791,6 +974,7 @@
 
   function init() {
     document.title = 'The Archives';
+    initStats();
     initNumpad();
     setReverb(reverbLevel);
     $('reverb-slider')?.addEventListener('input', event => setReverb(event.target.value));
