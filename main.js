@@ -31,6 +31,12 @@
   let activePlayer = null;
   let activeEffect = null;
   let activeRouting = null;
+  let activeSound = null;
+  let echoLevel = 0;
+  let voiceFilter = 'off';
+  let loopEnabled = false; // Intentionally resets to Off on every visit.
+  const pendingTails = new Set();
+
   const REVERB_STORAGE_KEY = 'archives-reverb-level-v1';
   let reverbLevel = 0;
   try {
@@ -429,9 +435,18 @@
     if (!routing) return;
     const level = reverbLevel / 100;
     const now = routing.context.currentTime;
-    // More pronounced room tail at high settings, but 0% remains fully dry.
     routing.dry.gain.setTargetAtTime(1 - 0.78 * level, now, .015);
     routing.wet.gain.setTargetAtTime(Math.pow(level, 0.85), now, .015);
+  }
+
+  function applyEchoLevel(routing) {
+    if (!routing) return;
+    const level = echoLevel / 100;
+    const now = routing.context.currentTime;
+    // Bounded feedback: even at 100%, less than half the delayed signal
+    // returns to the delay. The compressor also helps tame overlapping tails.
+    routing.echoWet.gain.setTargetAtTime(0.65 * level, now, .015);
+    routing.echoFeedback.gain.setTargetAtTime(0.38 * level, now, .015);
   }
 
   function setReverb(value) {
@@ -441,43 +456,146 @@
     if ($('reverb-slider')) $('reverb-slider').value = String(reverbLevel);
     if ($('reverb-value')) $('reverb-value').textContent = `${reverbLevel}%`;
     applyReverbLevel(activeRouting);
-    try {
-      localStorage.setItem(REVERB_STORAGE_KEY, String(reverbLevel));
-    } catch (error) {
-      // The slider still works if local storage is disabled.
-    }
+    try { localStorage.setItem(REVERB_STORAGE_KEY, String(reverbLevel)); }
+    catch (_) { /* Settings still work without storage. */ }
   }
 
+  function setEcho(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return;
+    echoLevel = Math.max(0, Math.min(100, Math.round(parsed)));
+    if ($('echo-slider')) $('echo-slider').value = String(echoLevel);
+    if ($('echo-value')) $('echo-value').textContent = `${echoLevel}%`;
+    applyEchoLevel(activeRouting);
+  }
+
+  function setVoiceFilter(value) {
+    if (!['off', 'robot', 'radio', 'wobble'].includes(value)) return;
+    voiceFilter = value;
+    if ($('voice-filter')) $('voice-filter').value = value;
+    // Rebuild the routing at the next play; avoids unsafe graph rewiring.
+    // Changing the dropdown during playback restarts that clip with the new filter.
+    if (activeAudio && activeSound) play(activeSound);
+  }
+
+  function setLoop(enabled) {
+    loopEnabled = Boolean(enabled);
+    if ($('loop-toggle')) $('loop-toggle').checked = loopEnabled;
+    if (activeAudio) activeAudio.loop = loopEnabled;
+  }
+
+  function setPlaybackLabel(name = 'Stopped') {
+    if ($('playing-label')) $('playing-label').textContent = name;
+  }
+
+  function resetAllEffects() {
+    setPosition(0);
+    setReverb(0);
+    setEcho(0);
+    setVoiceFilter('off');
+  }
+
+  // Each audio instance has exactly one effects chain. Repeats reuse it.
   function makeAudioRouting(audio, pitchEffect = null) {
     const context = Tone.getContext().rawContext;
-    const source = context.createMediaElementSource(audio);
-    const dry = context.createGain();
-    const wet = context.createGain();
-    const convolver = context.createConvolver();
-    convolver.buffer = getReverbImpulse(context);
+    const nodes = [];
+    const oscillators = [];
+    const node = (value) => { nodes.push(value); return value; };
+    const source = node(context.createMediaElementSource(audio));
+    let input = source;
 
     if (pitchEffect) {
       Tone.connect(source, pitchEffect);
-      Tone.connect(pitchEffect, dry);
-      Tone.connect(pitchEffect, convolver);
-    } else {
-      source.connect(dry);
-      source.connect(convolver);
+      input = pitchEffect;
     }
-    dry.connect(context.destination);
-    convolver.connect(wet);
-    wet.connect(context.destination);
 
+    function connect(a, b) { Tone.connect(a, b); }
+
+    if (voiceFilter === 'radio') {
+      const high = node(context.createBiquadFilter());
+      high.type = 'highpass'; high.frequency.value = 450;
+      const low = node(context.createBiquadFilter());
+      low.type = 'lowpass'; low.frequency.value = 2600;
+      const grit = node(context.createWaveShaper());
+      const curve = new Float32Array(1024);
+      for (let i = 0; i < curve.length; i++) {
+        const x = (i / (curve.length - 1)) * 2 - 1;
+        curve[i] = Math.tanh(2.4 * x) / Math.tanh(2.4);
+      }
+      grit.curve = curve;
+      connect(input, high); high.connect(low); low.connect(grit);
+      input = grit;
+    } else if (voiceFilter === 'robot') {
+      const ring = node(context.createGain());
+      ring.gain.value = 0.5;
+      const lfo = context.createOscillator();
+      const depth = node(context.createGain());
+      lfo.frequency.value = 42;
+      depth.gain.value = 0.5;
+      lfo.connect(depth); depth.connect(ring.gain);
+      lfo.start(); oscillators.push(lfo);
+      connect(input, ring); input = ring;
+    } else if (voiceFilter === 'wobble') {
+      // Time-varying delay creates actual vibrato, not just volume pulsing.
+      const vibrato = node(context.createDelay(0.05));
+      vibrato.delayTime.value = 0.012;
+      const lfo = context.createOscillator();
+      const depth = node(context.createGain());
+      lfo.frequency.value = 5.2;
+      depth.gain.value = 0.008;
+      lfo.connect(depth); depth.connect(vibrato.delayTime);
+      lfo.start(); oscillators.push(lfo);
+      connect(input, vibrato); input = vibrato;
+    }
+
+    const dry = node(context.createGain());
+    const wet = node(context.createGain());
+    const convolver = node(context.createConvolver());
+    convolver.buffer = getReverbImpulse(context);
+    const echoDelay = node(context.createDelay(1.0));
+    echoDelay.delayTime.value = 0.29;
+    const echoFeedback = node(context.createGain());
+    const echoWet = node(context.createGain());
+    const limiter = node(context.createDynamicsCompressor());
+    limiter.threshold.value = -12;
+    limiter.knee.value = 4;
+    limiter.ratio.value = 18;
+    limiter.attack.value = 0.003;
+    limiter.release.value = 0.20;
+    const output = node(context.createGain());
+    output.gain.value = 0.83;
+
+    connect(input, dry);
+    connect(input, convolver);
+    connect(input, echoDelay);
+    dry.connect(limiter);
+    convolver.connect(wet);
+    wet.connect(limiter);
+    echoDelay.connect(echoWet);
+    echoWet.connect(limiter);
+    echoDelay.connect(echoFeedback);
+    echoFeedback.connect(echoDelay);
+    limiter.connect(output);
+    output.connect(context.destination);
+
+    let disposed = false;
     const routing = {
-      context, dry, wet,
+      context, dry, wet, echoWet, echoFeedback,
       dispose() {
-        try { source.disconnect(); } catch (_) {}
-        try { dry.disconnect(); } catch (_) {}
-        try { convolver.disconnect(); } catch (_) {}
-        try { wet.disconnect(); } catch (_) {}
+        if (disposed) return;
+        disposed = true;
+        for (const lfo of oscillators) {
+          try { lfo.stop(); } catch (_) {}
+          try { lfo.disconnect(); } catch (_) {}
+        }
+        for (const item of nodes) {
+          try { item.disconnect(); } catch (_) {}
+        }
+        pendingTails.delete(routing);
       }
     };
     applyReverbLevel(routing);
+    applyEchoLevel(routing);
     return routing;
   }
 
@@ -487,6 +605,9 @@
 
   function stopCurrent() {
     sequence++;
+    activeSound = null;
+    setPlaybackLabel();
+    for (const tail of [...pendingTails]) tail.dispose();
 
     if (activeAudio) {
       const audio = activeAudio;
@@ -904,56 +1025,60 @@
     let audio = null;
     let routing = null;
     let effect = null;
-
     try {
-      // Both modes use the browser's normal MP3 decoding, preserving
-      // compatibility with clips that failed decodeAudioData().
-      if (window.Tone && Tone.getContext) {
-        await Tone.start();
-      } else if (mode === 'pitch' || reverbLevel > 0) {
-        throw new Error('Tone.js is required for pitch-only and reverb.');
+      if (!window.Tone || !Tone.getContext) {
+        throw new Error('The effects library is unavailable.');
       }
+      await Tone.start();
       if (thisSequence !== sequence) return;
 
       audio = new Audio();
       audio.preload = 'auto';
       audio.crossOrigin = 'anonymous';
       audio.src = sound.url;
+      audio.loop = loopEnabled;
       audio.playbackRate = mode === 'speed' ? rateFromPosition(position) : 1;
       audio.preservesPitch = mode === 'pitch';
       if ('mozPreservesPitch' in audio) audio.mozPreservesPitch = mode === 'pitch';
       if ('webkitPreservesPitch' in audio) audio.webkitPreservesPitch = mode === 'pitch';
       activeAudio = audio;
+      activeSound = sound;
 
       if (mode === 'pitch') {
-        if (!window.Tone?.PitchShift) throw new Error('Pitch-only library unavailable.');
+        if (!Tone.PitchShift) throw new Error('Pitch-only processing unavailable.');
         effect = new Tone.PitchShift({
-          pitch: semitonesFromPosition(position),
-          wet: 1
+          pitch: semitonesFromPosition(position), wet: 1
         });
         activeEffect = effect;
       }
-
-      if (window.Tone && Tone.getContext) {
-        routing = makeAudioRouting(audio, effect);
-        activeRouting = routing;
-      }
+      routing = makeAudioRouting(audio, effect);
+      activeRouting = routing;
 
       audio.addEventListener('ended', () => {
         if (activeAudio !== audio) return;
         activeAudio = null;
+        activeSound = null;
         activeRouting = null;
         activeEffect = null;
-        // Let the reverb tail finish naturally after the clip ends.
-        setTimeout(() => {
-          routing?.dispose();
-          effect?.dispose();
-        }, 5200);
+        setPlaybackLabel();
+        // Let existing effects fade out, without starting another effects chain.
+        const tail = {
+          dispose() {
+            routing.dispose();
+            effect?.dispose();
+            pendingTails.delete(tail);
+          }
+        };
+        pendingTails.add(tail);
+        setTimeout(() => tail.dispose(), 6000);
       }, { once: true });
 
       await audio.play();
-      // Count only a successful play, not missing or failed MP3s.
-      if (thisSequence === sequence) recordPlay(sound);
+      if (thisSequence === sequence) {
+        setPlaybackLabel(sound.name);
+        // Loops only generate one analytics event at the initial play start.
+        recordPlay(sound);
+      }
     } catch (error) {
       if (thisSequence !== sequence) {
         if (audio && activeAudio !== audio) {
@@ -979,6 +1104,16 @@
     setReverb(reverbLevel);
     $('reverb-slider')?.addEventListener('input', event => setReverb(event.target.value));
     $('reverb-reset')?.addEventListener('click', () => setReverb(0));
+    setEcho(0);
+    setVoiceFilter('off');
+    setLoop(false);
+    setPlaybackLabel();
+    $('echo-slider')?.addEventListener('input', event => setEcho(event.target.value));
+    $('voice-filter')?.addEventListener('change', event => setVoiceFilter(event.target.value));
+    $('effects-reset-all')?.addEventListener('click', resetAllEffects);
+    $('loop-toggle')?.addEventListener('change', event => setLoop(event.target.checked));
+    $('sound-stop')?.addEventListener('click', stopCurrent);
+
 
     $('search-input')?.addEventListener(
       'input',
