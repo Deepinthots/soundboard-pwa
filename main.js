@@ -231,13 +231,13 @@
 
   function getReverbImpulse(context) {
     if (cachedImpulse && cachedImpulseContext === context) return cachedImpulse;
-    const length = Math.ceil(context.sampleRate * 1.8);
+    const length = Math.ceil(context.sampleRate * 4.5);
     const buffer = context.createBuffer(2, length, context.sampleRate);
     for (let channel = 0; channel < 2; channel++) {
       const data = buffer.getChannelData(channel);
       for (let i = 0; i < length; i++) {
         const t = i / length;
-        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 2.5);
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 1.6);
       }
     }
     cachedImpulse = buffer;
@@ -249,8 +249,9 @@
     if (!routing) return;
     const level = reverbLevel / 100;
     const now = routing.context.currentTime;
-    routing.dry.gain.setTargetAtTime(1 - 0.45 * level, now, .015);
-    routing.wet.gain.setTargetAtTime(0.9 * level, now, .015);
+    // More pronounced room tail at high settings, but 0% remains fully dry.
+    routing.dry.gain.setTargetAtTime(1 - 0.78 * level, now, .015);
+    routing.wet.gain.setTargetAtTime(Math.pow(level, 0.85), now, .015);
   }
 
   function setReverb(value) {
@@ -766,7 +767,7 @@
         setTimeout(() => {
           routing?.dispose();
           effect?.dispose();
-        }, 2000);
+        }, 5200);
       }, { once: true });
 
       await audio.play();
