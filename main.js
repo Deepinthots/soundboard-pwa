@@ -470,7 +470,7 @@
   }
 
   function setVoiceFilter(value) {
-    if (!['off', 'robot', 'radio', 'wobble'].includes(value)) return;
+    if (!['off', 'wobble'].includes(value)) return;
     voiceFilter = value;
     if ($('voice-filter')) $('voice-filter').value = value;
     // Rebuild the routing at the next play; avoids unsafe graph rewiring.
@@ -511,41 +511,28 @@
 
     function connect(a, b) { Tone.connect(a, b); }
 
-    if (voiceFilter === 'radio') {
-      const high = node(context.createBiquadFilter());
-      high.type = 'highpass'; high.frequency.value = 450;
-      const low = node(context.createBiquadFilter());
-      low.type = 'lowpass'; low.frequency.value = 2600;
-      const grit = node(context.createWaveShaper());
-      const curve = new Float32Array(1024);
-      for (let i = 0; i < curve.length; i++) {
-        const x = (i / (curve.length - 1)) * 2 - 1;
-        curve[i] = Math.tanh(2.4 * x) / Math.tanh(2.4);
-      }
-      grit.curve = curve;
-      connect(input, high); high.connect(low); low.connect(grit);
-      input = grit;
-    } else if (voiceFilter === 'robot') {
-      const ring = node(context.createGain());
-      ring.gain.value = 0.5;
-      const lfo = context.createOscillator();
-      const depth = node(context.createGain());
-      lfo.frequency.value = 42;
-      depth.gain.value = 0.5;
-      lfo.connect(depth); depth.connect(ring.gain);
-      lfo.start(); oscillators.push(lfo);
-      connect(input, ring); input = ring;
-    } else if (voiceFilter === 'wobble') {
-      // Time-varying delay creates actual vibrato, not just volume pulsing.
+    // Gentle Wobble is the only optional voice filter in v1.0.
+    // The original sound remains audible for clarity.
+    if (voiceFilter === 'wobble') {
+      // Gentle wow/flutter: ~2 ms delay modulation, blended with clean.
+      // Previously 8 ms, which made the original sound unrecognizable.
+      const clean = node(context.createGain());
+      clean.gain.value = 0.45;
       const vibrato = node(context.createDelay(0.05));
-      vibrato.delayTime.value = 0.012;
+      vibrato.delayTime.value = 0.009;
       const lfo = context.createOscillator();
+      lfo.type = 'sine';
+      lfo.frequency.value = 4.1;
       const depth = node(context.createGain());
-      lfo.frequency.value = 5.2;
-      depth.gain.value = 0.008;
+      depth.gain.value = 0.002;
       lfo.connect(depth); depth.connect(vibrato.delayTime);
       lfo.start(); oscillators.push(lfo);
-      connect(input, vibrato); input = vibrato;
+      const warped = node(context.createGain());
+      warped.gain.value = 0.55;
+      const mix = node(context.createGain());
+      connect(input, clean); clean.connect(mix);
+      connect(input, vibrato); vibrato.connect(warped); warped.connect(mix);
+      input = mix;
     }
 
     const dry = node(context.createGain());
@@ -1109,6 +1096,7 @@
     setLoop(false);
     setPlaybackLabel();
     $('echo-slider')?.addEventListener('input', event => setEcho(event.target.value));
+    $('echo-reset')?.addEventListener('click', () => setEcho(0));
     $('voice-filter')?.addEventListener('change', event => setVoiceFilter(event.target.value));
     $('effects-reset-all')?.addEventListener('click', resetAllEffects);
     $('loop-toggle')?.addEventListener('change', event => setLoop(event.target.checked));

@@ -816,7 +816,10 @@ h1 {
       <div class="compact-effect-control">
         <div class="reverb-header">
           <label class="reverb-title" for="echo-slider">Echo</label>
-          <output id="echo-value" for="echo-slider">0%</output>
+          <div class="reverb-actions">
+            <output id="echo-value" for="echo-slider">0%</output>
+            <button id="echo-reset" class="pitch-reset" type="button">Reset</button>
+          </div>
         </div>
         <input id="echo-slider" class="pitch-slider" type="range"
                min="0" max="100" step="1" value="0" aria-label="Echo intensity">
@@ -827,9 +830,7 @@ h1 {
         <label for="voice-filter" class="filter-label">Voice Filter</label>
         <select id="voice-filter" class="filter-select" aria-label="Voice filter">
           <option value="off">Off — Original sound</option>
-          <option value="robot">Robot — Metallic</option>
-          <option value="radio">Walkie-Talkie — Radio</option>
-          <option value="wobble">Wobble — Warped tape</option>
+          <option value="wobble">Wobble — Gentle warble</option>
         </select>
       </div>
       <button id="effects-reset-all" class="effects-reset" type="button">Reset all effects</button>
