@@ -548,6 +548,101 @@ h1 {
   .numpad-slot .slot-name { font-size: .72rem; }
 }
 
+
+/* Compact desktop layout: pitch and numpad share a row */
+.archives-workbench {
+  display: grid;
+  grid-template-columns: minmax(0, 1.35fr) minmax(360px, 1fr);
+  gap: 12px;
+  align-items: stretch;
+  margin-top: 14px;
+}
+.archives-workbench .pitch-panel,
+.archives-workbench .numpad-panel {
+  margin: 0;
+  min-width: 0;
+  height: 100%;
+}
+.archives-workbench .numpad-panel {
+  padding: 12px;
+}
+.archives-workbench .numpad-heading {
+  margin-bottom: 8px;
+}
+.archives-workbench .numpad-heading h2 {
+  font-size: .88rem;
+  margin-bottom: 2px;
+}
+.archives-workbench .numpad-heading p {
+  font-size: .7rem;
+}
+.archives-workbench .numpad-grid {
+  max-width: none;
+  gap: 5px;
+}
+.archives-workbench .numpad-slot {
+  min-height: 48px;
+  padding: 5px 9px;
+  gap: 2px;
+}
+.archives-workbench .numpad-slot .slot-name {
+  font-size: .75rem;
+}
+.archives-workbench .numpad-hint {
+  font-size: .68rem;
+  margin-top: 8px;
+}
+.archives-workbench .pitch-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+@media (max-width: 900px) {
+  .archives-workbench {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .archives-workbench .pitch-panel,
+  .archives-workbench .numpad-panel { height: auto; }
+}
+
+
+/* Reverb control, directly underneath the pitch slider */
+.reverb-control {
+  margin-top: 19px;
+  padding-top: 15px;
+  border-top: 1px solid var(--border);
+}
+.reverb-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.reverb-title {
+  font-size: .88rem;
+  font-weight: 600;
+}
+.reverb-title::before {
+  content: "◌";
+  color: var(--accent-light);
+  margin-right: 9px;
+  font-size: 1.1em;
+}
+.reverb-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+#reverb-value {
+  min-width: 37px;
+  text-align: right;
+  font-size: .9rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+.reverb-labels { margin-top: 8px; }
+
 </style>
 
 <!-- Tone.js for pitch shifting without changing speed -->
@@ -582,6 +677,7 @@ h1 {
 
     <p class="tip">Click any sound to play</p>
 
+    <div class="archives-workbench">
     <div class="pitch-panel">
 
       <div
@@ -657,9 +753,23 @@ h1 {
         <span>+12 st High</span>
       </div>
 
-    </div>
+      <div class="reverb-control">
+        <div class="reverb-header">
+          <label class="reverb-title" for="reverb-slider">Reverb</label>
+          <div class="reverb-actions">
+            <output id="reverb-value" for="reverb-slider">0%</output>
+            <button id="reverb-reset" class="pitch-reset" type="button">Reset</button>
+          </div>
+        </div>
+        <input id="reverb-slider" class="pitch-slider" type="range"
+               min="0" max="100" step="1" value="0"
+               aria-label="Reverb intensity">
+        <div class="pitch-labels reverb-labels">
+          <span>Dry</span><span>Wet</span>
+        </div>
+      </div>
 
-  </section>
+    </div>
 
   <section class="numpad-panel" aria-label="Numpad sound bindings">
     <div class="numpad-heading">
@@ -680,7 +790,10 @@ h1 {
       <button type="button" class="numpad-slot" data-numpad="2"></button>
       <button type="button" class="numpad-slot" data-numpad="3"></button>
     </div>
-    <p class="numpad-hint">Click a filled slot to play; right-click it to clear. Drag one slot onto another to move or swap. Numpad 1–9 work while this tab is active and Num Lock is on. Bindings are saved in this browser.</p>
+    <p class="numpad-hint">Click to play · Right-click to clear · Drag to swap · Numpad 1–9 while this tab is active. Saved in this browser.</p>
+  </section>
+    </div>
+
   </section>
 
   <section

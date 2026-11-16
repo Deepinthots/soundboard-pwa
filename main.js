@@ -30,6 +30,16 @@
   let activeAudio = null;
   let activePlayer = null;
   let activeEffect = null;
+  let activeRouting = null;
+  const REVERB_STORAGE_KEY = 'archives-reverb-level-v1';
+  let reverbLevel = 0;
+  try {
+    const stored = Number(localStorage.getItem(REVERB_STORAGE_KEY));
+    if (Number.isFinite(stored)) reverbLevel = Math.max(0, Math.min(100, stored));
+  } catch (error) {
+    console.warn('Reverb preference unavailable:', error);
+  }
+
 
   let sequence = 0;
   let statusTimer;
@@ -211,6 +221,86 @@
   }
 
   /*
+    SHARED REVERB PROCESSING
+    Uses the browser's native ConvolverNode after optional pitch shifting.
+    Neither playback mode uses MP3 decodeAudioData().
+  */
+
+  let cachedImpulse = null;
+  let cachedImpulseContext = null;
+
+  function getReverbImpulse(context) {
+    if (cachedImpulse && cachedImpulseContext === context) return cachedImpulse;
+    const length = Math.ceil(context.sampleRate * 1.8);
+    const buffer = context.createBuffer(2, length, context.sampleRate);
+    for (let channel = 0; channel < 2; channel++) {
+      const data = buffer.getChannelData(channel);
+      for (let i = 0; i < length; i++) {
+        const t = i / length;
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - t, 2.5);
+      }
+    }
+    cachedImpulse = buffer;
+    cachedImpulseContext = context;
+    return buffer;
+  }
+
+  function applyReverbLevel(routing) {
+    if (!routing) return;
+    const level = reverbLevel / 100;
+    const now = routing.context.currentTime;
+    routing.dry.gain.setTargetAtTime(1 - 0.45 * level, now, .015);
+    routing.wet.gain.setTargetAtTime(0.9 * level, now, .015);
+  }
+
+  function setReverb(value) {
+    const parsed = Number(value);
+    if (!Number.isFinite(parsed)) return;
+    reverbLevel = Math.max(0, Math.min(100, Math.round(parsed)));
+    if ($('reverb-slider')) $('reverb-slider').value = String(reverbLevel);
+    if ($('reverb-value')) $('reverb-value').textContent = `${reverbLevel}%`;
+    applyReverbLevel(activeRouting);
+    try {
+      localStorage.setItem(REVERB_STORAGE_KEY, String(reverbLevel));
+    } catch (error) {
+      // The slider still works if local storage is disabled.
+    }
+  }
+
+  function makeAudioRouting(audio, pitchEffect = null) {
+    const context = Tone.getContext().rawContext;
+    const source = context.createMediaElementSource(audio);
+    const dry = context.createGain();
+    const wet = context.createGain();
+    const convolver = context.createConvolver();
+    convolver.buffer = getReverbImpulse(context);
+
+    if (pitchEffect) {
+      Tone.connect(source, pitchEffect);
+      Tone.connect(pitchEffect, dry);
+      Tone.connect(pitchEffect, convolver);
+    } else {
+      source.connect(dry);
+      source.connect(convolver);
+    }
+    dry.connect(context.destination);
+    convolver.connect(wet);
+    wet.connect(context.destination);
+
+    const routing = {
+      context, dry, wet,
+      dispose() {
+        try { source.disconnect(); } catch (_) {}
+        try { dry.disconnect(); } catch (_) {}
+        try { convolver.disconnect(); } catch (_) {}
+        try { wet.disconnect(); } catch (_) {}
+      }
+    };
+    applyReverbLevel(routing);
+    return routing;
+  }
+
+  /*
     STOP PREVIOUS AUDIO
   */
 
@@ -239,6 +329,11 @@
       }
 
       player.dispose();
+    }
+
+    if (activeRouting) {
+      activeRouting.dispose();
+      activeRouting = null;
     }
 
     if (activeEffect) {
@@ -623,151 +718,70 @@
 
   async function play(sound) {
     stopCurrent();
-
     const thisSequence = sequence;
+    let audio = null;
+    let routing = null;
+    let effect = null;
 
-    /*
-      MODE 1: PITCH + SPEED
-      Uses native browser audio.
-    */
+    try {
+      // Both modes use the browser's normal MP3 decoding, preserving
+      // compatibility with clips that failed decodeAudioData().
+      if (window.Tone && Tone.getContext) {
+        await Tone.start();
+      } else if (mode === 'pitch' || reverbLevel > 0) {
+        throw new Error('Tone.js is required for pitch-only and reverb.');
+      }
+      if (thisSequence !== sequence) return;
 
-    if (mode === 'speed') {
-      const audio = new Audio(sound.url);
-
+      audio = new Audio();
+      audio.preload = 'auto';
+      audio.crossOrigin = 'anonymous';
+      audio.src = sound.url;
+      audio.playbackRate = mode === 'speed' ? rateFromPosition(position) : 1;
+      audio.preservesPitch = mode === 'pitch';
+      if ('mozPreservesPitch' in audio) audio.mozPreservesPitch = mode === 'pitch';
+      if ('webkitPreservesPitch' in audio) audio.webkitPreservesPitch = mode === 'pitch';
       activeAudio = audio;
 
-      if ('preservesPitch' in audio) {
-        audio.preservesPitch = false;
+      if (mode === 'pitch') {
+        if (!window.Tone?.PitchShift) throw new Error('Pitch-only library unavailable.');
+        effect = new Tone.PitchShift({
+          pitch: semitonesFromPosition(position),
+          wet: 1
+        });
+        activeEffect = effect;
       }
 
-      if ('mozPreservesPitch' in audio) {
-        audio.mozPreservesPitch = false;
+      if (window.Tone && Tone.getContext) {
+        routing = makeAudioRouting(audio, effect);
+        activeRouting = routing;
       }
-
-      if ('webkitPreservesPitch' in audio) {
-        audio.webkitPreservesPitch = false;
-      }
-
-      audio.playbackRate =
-        rateFromPosition(position);
-
-      audio.addEventListener('error', () => {
-        if (activeAudio === audio) {
-          showStatus(
-            `Could not load: ${sound.name}`
-          );
-        }
-      }, { once: true });
 
       audio.addEventListener('ended', () => {
-        if (activeAudio === audio) {
-          activeAudio = null;
-        }
+        if (activeAudio !== audio) return;
+        activeAudio = null;
+        activeRouting = null;
+        activeEffect = null;
+        // Let the reverb tail finish naturally after the clip ends.
+        setTimeout(() => {
+          routing?.dispose();
+          effect?.dispose();
+        }, 2000);
       }, { once: true });
 
-      try {
-        await audio.play();
-
-      } catch (error) {
-        if (thisSequence !== sequence) {
-          return;
+      await audio.play();
+    } catch (error) {
+      if (thisSequence !== sequence) {
+        if (audio && activeAudio !== audio) {
+          routing?.dispose();
+          effect?.dispose();
         }
-
-        console.error(
-          'Playback error:',
-          sound.url,
-          error
-        );
-
-        showStatus(
-          `Could not play: ${sound.name}`
-        );
-
-        activeAudio = null;
+        return;
       }
-
-      return;
+      console.error('Sound playback error:', sound.url, error);
+      showStatus(`Could not play: ${sound.name}`);
+      stopCurrent();
     }
-
-    /*
-      MODE 2: PITCH ONLY
-      Preserves playback duration.
-
-      Uses browser fetch and decoding
-      instead of Tone.Player.load(url).
-
-      This prevents the double-encoding
-      errors we fixed previously.
-    */
-
-
-try {
-  if (!window.Tone || !Tone.PitchShift) {
-    showStatus('Pitch-only library unavailable.');
-    return;
-  }
-
-  await Tone.start();
-
-  if (thisSequence !== sequence) return;
-
-  // Use the browser's MP3 player rather than
-  // decodeAudioData(), which fails on some files.
-  const audio = new Audio();
-
-  audio.preload = 'auto';
-  audio.crossOrigin = 'anonymous';
-  audio.src = sound.url;
-  audio.playbackRate = 1;
-  audio.preservesPitch = true;
-
-  activeAudio = audio;
-
-  // Create the pitch-shifting effect.
-  const effect = new Tone.PitchShift({
-    pitch: semitonesFromPosition(position),
-    wet: 1
-  }).toDestination();
-
-  activeEffect = effect;
-
-  // Route the browser's audio playback
-  // through Tone.js.
-  const source = Tone.getContext()
-    .rawContext.createMediaElementSource(audio);
-
-  Tone.connect(source, effect);
-
-  audio.addEventListener('ended', () => {
-    if (activeAudio !== audio) return;
-
-    activeAudio = null;
-    activeEffect = null;
-
-    source.disconnect();
-
-    setTimeout(() => {
-      effect.dispose();
-    }, 350);
-
-  }, { once: true });
-
-  await audio.play();
-
-} catch (error) {
-  if (thisSequence !== sequence) return;
-
-  console.error(
-    'Pitch-only playback error:',
-    sound.url,
-    error
-  );
-
-  showStatus(`Could not play: ${sound.name}`);
-
-  stopCurrent();
-}
-
   }
 
   /*
@@ -777,6 +791,9 @@ try {
   function init() {
     document.title = 'The Archives';
     initNumpad();
+    setReverb(reverbLevel);
+    $('reverb-slider')?.addEventListener('input', event => setReverb(event.target.value));
+    $('reverb-reset')?.addEventListener('click', () => setReverb(0));
 
     $('search-input')?.addEventListener(
       'input',
