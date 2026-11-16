@@ -453,6 +453,101 @@ h1 {
     transition: none;
   }
 }
+
+/* Personal numpad bindings */
+.numpad-panel {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 14px 16px;
+  margin: 0 0 18px;
+}
+.numpad-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.numpad-heading h2 {
+  margin: 0 0 4px;
+  font-size: .95rem;
+  font-weight: 600;
+}
+.numpad-heading p, .numpad-hint {
+  color: var(--muted);
+  font-size: .74rem;
+  line-height: 1.5;
+  margin: 0;
+}
+.numpad-hint { margin-top: 10px; }
+.numpad-clear {
+  flex-shrink: 0;
+  background: #1c2420;
+  color: var(--text);
+  border: 1px solid var(--border);
+  padding: 7px 11px;
+  border-radius: 7px;
+  font: inherit;
+  font-size: .76rem;
+  cursor: pointer;
+}
+.numpad-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+  max-width: 620px;
+}
+.numpad-slot {
+  min-width: 0;
+  min-height: 68px;
+  padding: 9px 11px;
+  border: 1px dashed #3b4b41;
+  border-radius: 8px;
+  background: #151a17;
+  color: var(--muted);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 5px;
+  text-align: left;
+  font: inherit;
+  cursor: pointer;
+}
+.numpad-slot.assigned {
+  background: var(--active);
+  border: 1px solid #426f59;
+  color: var(--text);
+}
+.numpad-slot.drag-over {
+  background: #294c39;
+  border-color: #86bba0;
+}
+.numpad-slot .slot-number {
+  color: var(--accent-light);
+  font-size: .69rem;
+  font-weight: 700;
+}
+.numpad-slot .slot-name {
+  font-size: .8rem;
+  overflow-wrap: anywhere;
+  line-height: 1.25;
+}
+.numpad-slot:hover, .numpad-clear:hover {
+  border-color: var(--accent-light);
+}
+.numpad-slot:focus-visible, .numpad-clear:focus-visible {
+  outline: 2px solid var(--accent-light);
+  outline-offset: 2px;
+}
+.sound-button[draggable="true"] { cursor: grab; }
+.sound-button[draggable="true"]:active { cursor: grabbing; }
+@media (max-width: 600px) {
+  .numpad-panel { padding: 12px; }
+  .numpad-slot { padding: 8px; min-height: 70px; }
+  .numpad-slot .slot-name { font-size: .72rem; }
+}
+
 </style>
 
 <!-- Tone.js for pitch shifting without changing speed -->
@@ -564,6 +659,28 @@ h1 {
 
     </div>
 
+  </section>
+
+  <section class="numpad-panel" aria-label="Numpad sound bindings">
+    <div class="numpad-heading">
+      <div>
+        <h2>Numpad Soundboard</h2>
+        <p>Drag any sound below onto a slot to assign it.</p>
+      </div>
+      <button id="numpad-clear-all" class="numpad-clear" type="button">Clear all</button>
+    </div>
+    <div class="numpad-grid" id="numpad-grid">
+      <button type="button" class="numpad-slot" data-numpad="7"></button>
+      <button type="button" class="numpad-slot" data-numpad="8"></button>
+      <button type="button" class="numpad-slot" data-numpad="9"></button>
+      <button type="button" class="numpad-slot" data-numpad="4"></button>
+      <button type="button" class="numpad-slot" data-numpad="5"></button>
+      <button type="button" class="numpad-slot" data-numpad="6"></button>
+      <button type="button" class="numpad-slot" data-numpad="1"></button>
+      <button type="button" class="numpad-slot" data-numpad="2"></button>
+      <button type="button" class="numpad-slot" data-numpad="3"></button>
+    </div>
+    <p class="numpad-hint">Click a filled slot to play; right-click it to clear. Drag one slot onto another to move or swap. Numpad 1–9 work while this tab is active and Num Lock is on. Bindings are saved in this browser.</p>
   </section>
 
   <section

@@ -368,6 +368,174 @@
   }
 
   /*
+    PERSONAL NUMPAD BINDINGS
+    Drag from the sound list, click or press numpad to play.
+    Each visitor's assignments stay in their own browser.
+  */
+
+  const NUMPAD_KEY = 'archives-numpad-bindings-v1';
+  const NUMPAD_SOUND_TYPE = 'application/x-archives-sound';
+  const NUMPAD_SLOT_TYPE = 'application/x-archives-slot';
+  let numpadBindings = {};
+
+  function readNumpadBindings() {
+    try {
+      const stored = JSON.parse(localStorage.getItem(NUMPAD_KEY) || '{}');
+      if (!stored || typeof stored !== 'object' || Array.isArray(stored)) return;
+      for (let n = 1; n <= 9; n++) {
+        if (typeof stored[n] === 'string') numpadBindings[n] = stored[n];
+      }
+    } catch (error) {
+      console.warn('Unable to read numpad assignments:', error);
+    }
+  }
+
+  function saveNumpadBindings() {
+    try {
+      localStorage.setItem(NUMPAD_KEY, JSON.stringify(numpadBindings));
+    } catch (error) {
+      console.warn('Unable to save numpad assignments:', error);
+    }
+  }
+
+  function getNumpadSound(key) {
+    return sounds.find(sound => sound.name === numpadBindings[key]);
+  }
+
+  function renderNumpad() {
+    document.querySelectorAll('.numpad-slot').forEach(slot => {
+      const key = slot.dataset.numpad;
+      const assignedName = numpadBindings[key];
+      const sound = getNumpadSound(key);
+
+      const number = document.createElement('span');
+      number.className = 'slot-number';
+      number.textContent = 'NUM ' + key;
+
+      const label = document.createElement('span');
+      label.className = 'slot-name';
+      label.textContent = sound
+        ? sound.name
+        : assignedName ? 'Unavailable: ' + assignedName : 'Empty';
+
+      slot.replaceChildren(number, label);
+      slot.classList.toggle('assigned', Boolean(assignedName));
+      slot.draggable = Boolean(sound);
+      slot.title = sound
+        ? sound.name + ' (click to play; right-click to clear)'
+        : 'Drop a sound here to assign Numpad ' + key;
+      slot.setAttribute('aria-label',
+        'Numpad ' + key + ': ' + (assignedName || 'empty'));
+    });
+  }
+
+  function bindSoundToNumpad(key, name) {
+    const sound = sounds.find(item => item.name === name);
+    if (!sound) return;
+    numpadBindings[key] = sound.name;
+    saveNumpadBindings();
+    renderNumpad();
+  }
+
+  function initNumpad() {
+    readNumpadBindings();
+
+    document.querySelectorAll('.numpad-slot').forEach(slot => {
+      const key = slot.dataset.numpad;
+
+      slot.addEventListener('click', () => {
+        const sound = getNumpadSound(key);
+        if (sound) play(sound);
+      });
+
+      slot.addEventListener('contextmenu', event => {
+        event.preventDefault();
+        delete numpadBindings[key];
+        saveNumpadBindings();
+        renderNumpad();
+      });
+
+      slot.addEventListener('dragstart', event => {
+        const sound = getNumpadSound(key);
+        if (!sound || !event.dataTransfer) {
+          event.preventDefault();
+          return;
+        }
+        event.dataTransfer.effectAllowed = 'move';
+        event.dataTransfer.setData(NUMPAD_SLOT_TYPE, key);
+        event.dataTransfer.setData('text/plain', sound.name);
+      });
+
+      slot.addEventListener('dragover', event => {
+        if (!event.dataTransfer) return;
+        const types = Array.from(event.dataTransfer.types);
+        if (!types.includes(NUMPAD_SLOT_TYPE) &&
+            !types.includes(NUMPAD_SOUND_TYPE)) return;
+        event.preventDefault();
+        event.dataTransfer.dropEffect = types.includes(NUMPAD_SLOT_TYPE)
+          ? 'move' : 'copy';
+        slot.classList.add('drag-over');
+      });
+
+      slot.addEventListener('dragleave', () => {
+        slot.classList.remove('drag-over');
+      });
+
+      slot.addEventListener('drop', event => {
+        event.preventDefault();
+        slot.classList.remove('drag-over');
+        const transfer = event.dataTransfer;
+        if (!transfer) return;
+
+        const fromKey = transfer.getData(NUMPAD_SLOT_TYPE);
+        if (fromKey && /^[1-9]$/.test(fromKey)) {
+          if (fromKey === key || !numpadBindings[fromKey]) return;
+          const oldTarget = numpadBindings[key];
+          numpadBindings[key] = numpadBindings[fromKey];
+          if (oldTarget) numpadBindings[fromKey] = oldTarget;
+          else delete numpadBindings[fromKey];
+          saveNumpadBindings();
+          renderNumpad();
+          return;
+        }
+
+        const name = transfer.getData(NUMPAD_SOUND_TYPE);
+        if (name) bindSoundToNumpad(key, name);
+      });
+
+      slot.addEventListener('dragend', () => {
+        document.querySelectorAll('.numpad-slot').forEach(item =>
+          item.classList.remove('drag-over'));
+      });
+    });
+
+    $('numpad-clear-all')?.addEventListener('click', () => {
+      if (!Object.keys(numpadBindings).length) return;
+      if (!window.confirm('Clear all numpad assignments?')) return;
+      numpadBindings = {};
+      saveNumpadBindings();
+      renderNumpad();
+    });
+
+    document.addEventListener('keydown', event => {
+      if (event.repeat || event.ctrlKey || event.altKey || event.metaKey) return;
+      const target = event.target;
+      if (target instanceof HTMLInputElement ||
+          target instanceof HTMLTextAreaElement ||
+          target instanceof HTMLSelectElement ||
+          target?.isContentEditable) return;
+      if (!/^Numpad[1-9]$/.test(event.code) || !/^[1-9]$/.test(event.key)) return;
+      const key = event.code.slice(-1);
+      const sound = getNumpadSound(key);
+      if (!sound) return;
+      event.preventDefault();
+      play(sound);
+    });
+
+    renderNumpad();
+  }
+
+  /*
     CREATE SOUND BUTTONS
   */
 
@@ -393,6 +561,7 @@
     }
 
     container.replaceChildren();
+    renderNumpad();
 
     if (sounds.length === 0) {
       const loading = document.createElement('div');
@@ -418,6 +587,13 @@
       const button = document.createElement('button');
 
       button.type = 'button';
+      button.draggable = true;
+      button.addEventListener('dragstart', event => {
+        if (!event.dataTransfer) return;
+        event.dataTransfer.effectAllowed = 'copy';
+        event.dataTransfer.setData(NUMPAD_SOUND_TYPE, sound.name);
+        event.dataTransfer.setData('text/plain', sound.name);
+      });
       button.className = 'sound-button';
 
       const name = document.createElement('div');
@@ -600,6 +776,7 @@ try {
 
   function init() {
     document.title = 'The Archives';
+    initNumpad();
 
     $('search-input')?.addEventListener(
       'input',
