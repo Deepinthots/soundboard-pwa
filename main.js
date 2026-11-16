@@ -470,18 +470,19 @@
   }
 
   function setVoiceFilter(value) {
-    if (!['off', 'wobble'].includes(value)) return;
+    if (!['off', 'wobble', 'reverse'].includes(value)) return;
     voiceFilter = value;
     if ($('voice-filter')) $('voice-filter').value = value;
     // Rebuild the routing at the next play; avoids unsafe graph rewiring.
     // Changing the dropdown during playback restarts that clip with the new filter.
-    if (activeAudio && activeSound) play(activeSound);
+    if ((activeAudio || activePlayer) && activeSound) play(activeSound);
   }
 
   function setLoop(enabled) {
     loopEnabled = Boolean(enabled);
     if ($('loop-toggle')) $('loop-toggle').checked = loopEnabled;
     if (activeAudio) activeAudio.loop = loopEnabled;
+    if (activePlayer) activePlayer.loop = loopEnabled;
   }
 
   function setPlaybackLabel(name = 'Stopped') {
@@ -496,12 +497,12 @@
   }
 
   // Each audio instance has exactly one effects chain. Repeats reuse it.
-  function makeAudioRouting(audio, pitchEffect = null) {
+  function makeAudioRouting(audio, pitchEffect = null, providedSource = null) {
     const context = Tone.getContext().rawContext;
     const nodes = [];
     const oscillators = [];
     const node = (value) => { nodes.push(value); return value; };
-    const source = node(context.createMediaElementSource(audio));
+    const source = node(providedSource || context.createMediaElementSource(audio));
     let input = source;
 
     if (pitchEffect) {
@@ -609,15 +610,10 @@
       const player = activePlayer;
       activePlayer = null;
 
-      player.onstop = () => {};
-
-      try {
-        player.stop();
-      } catch (error) {
-        // Player may not have started yet.
-      }
-
-      player.dispose();
+      // Reversed audio uses a native AudioBufferSourceNode.
+      player.onended = null;
+      try { player.stop(); } catch (_) { /* Already ended. */ }
+      try { player.disconnect(); } catch (_) {}
     }
 
     if (activeRouting) {
@@ -676,6 +672,10 @@
       activeAudio.playbackRate =
     rateFromPosition(position);
 }
+
+    if (activePlayer && mode === 'speed') {
+      activePlayer.playbackRate.value = rateFromPosition(position);
+    }
 
     if (activeEffect) {
       activeEffect.pitch =
@@ -1006,10 +1006,50 @@
     PLAY AUDIO
   */
 
+  // True reverse: reverse the PCM samples, not pitch or echo.
+  // The browser's decodeAudioData API cannot decode every MP3 that
+  // an HTMLAudioElement can play. If a file fails, explain it rather
+  // than quietly playing the wrong direction.
+  async function getReversedBuffer(sound, context) {
+    const response = await fetch(sound.url);
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    const bytes = await response.arrayBuffer();
+    const original = await context.decodeAudioData(bytes);
+    const backwards = context.createBuffer(
+      original.numberOfChannels,
+      original.length,
+      original.sampleRate
+    );
+    for (let channel = 0; channel < original.numberOfChannels; channel++) {
+      const from = original.getChannelData(channel);
+      const to = backwards.getChannelData(channel);
+      for (let i = 0, j = from.length - 1; i < from.length; i++, j--) {
+        to[i] = from[j];
+      }
+    }
+    return backwards;
+  }
+
+  function retainEffectTail(routing, effect) {
+    const tail = {
+      dispose() {
+        routing?.dispose();
+        effect?.dispose();
+        pendingTails.delete(tail);
+      }
+    };
+    pendingTails.add(tail);
+    setTimeout(() => tail.dispose(), 6000);
+  }
+
   async function play(sound) {
+    // Loop belongs to the currently playing clip only. Even if Loop
+    // was checked, clicking a sound or using a numpad key turns it Off.
+    setLoop(false);
     stopCurrent();
     const thisSequence = sequence;
     let audio = null;
+    let player = null;
     let routing = null;
     let effect = null;
     try {
@@ -1019,17 +1059,34 @@
       await Tone.start();
       if (thisSequence !== sequence) return;
 
-      audio = new Audio();
-      audio.preload = 'auto';
-      audio.crossOrigin = 'anonymous';
-      audio.src = sound.url;
-      audio.loop = loopEnabled;
-      audio.playbackRate = mode === 'speed' ? rateFromPosition(position) : 1;
-      audio.preservesPitch = mode === 'pitch';
-      if ('mozPreservesPitch' in audio) audio.mozPreservesPitch = mode === 'pitch';
-      if ('webkitPreservesPitch' in audio) audio.webkitPreservesPitch = mode === 'pitch';
-      activeAudio = audio;
-      activeSound = sound;
+      const reversed = voiceFilter === 'reverse';
+      const context = Tone.getContext().rawContext;
+
+      if (reversed) {
+        // Decode only for Reverse; normal/Wobble audio keeps the
+        // native browser playback path that works with unusual MP3s.
+        const buffer = await getReversedBuffer(sound, context);
+        if (thisSequence !== sequence) return;
+        player = context.createBufferSource();
+        player.buffer = buffer;
+        player.loop = loopEnabled;
+        player.playbackRate.value = mode === 'speed'
+          ? rateFromPosition(position) : 1;
+        activePlayer = player;
+        activeSound = sound;
+      } else {
+        audio = new Audio();
+        audio.preload = 'auto';
+        audio.crossOrigin = 'anonymous';
+        audio.src = sound.url;
+        audio.loop = loopEnabled;
+        audio.playbackRate = mode === 'speed' ? rateFromPosition(position) : 1;
+        audio.preservesPitch = mode === 'pitch';
+        if ('mozPreservesPitch' in audio) audio.mozPreservesPitch = mode === 'pitch';
+        if ('webkitPreservesPitch' in audio) audio.webkitPreservesPitch = mode === 'pitch';
+        activeAudio = audio;
+        activeSound = sound;
+      }
 
       if (mode === 'pitch') {
         if (!Tone.PitchShift) throw new Error('Pitch-only processing unavailable.');
@@ -1038,44 +1095,46 @@
         });
         activeEffect = effect;
       }
-      routing = makeAudioRouting(audio, effect);
+      routing = makeAudioRouting(audio, effect, player);
       activeRouting = routing;
 
-      audio.addEventListener('ended', () => {
-        if (activeAudio !== audio) return;
+      const finish = () => {
+        if (thisSequence !== sequence) return;
+        if (reversed && activePlayer !== player) return;
+        if (!reversed && activeAudio !== audio) return;
         activeAudio = null;
+        activePlayer = null;
         activeSound = null;
         activeRouting = null;
         activeEffect = null;
         setPlaybackLabel();
-        // Let existing effects fade out, without starting another effects chain.
-        const tail = {
-          dispose() {
-            routing.dispose();
-            effect?.dispose();
-            pendingTails.delete(tail);
-          }
-        };
-        pendingTails.add(tail);
-        setTimeout(() => tail.dispose(), 6000);
-      }, { once: true });
+        retainEffectTail(routing, effect);
+      };
 
-      await audio.play();
+      if (reversed) {
+        player.onended = finish;
+        player.start(0);
+      } else {
+        audio.addEventListener('ended', finish, { once: true });
+        await audio.play();
+      }
       if (thisSequence === sequence) {
         setPlaybackLabel(sound.name);
-        // Loops only generate one analytics event at the initial play start.
+        // Only count the initial start, never each loop iteration.
         recordPlay(sound);
       }
     } catch (error) {
       if (thisSequence !== sequence) {
-        if (audio && activeAudio !== audio) {
+        if (audio && activeAudio !== audio || player && activePlayer !== player) {
           routing?.dispose();
           effect?.dispose();
         }
         return;
       }
       console.error('Sound playback error:', sound.url, error);
-      showStatus(`Could not play: ${sound.name}`);
+      showStatus(voiceFilter === 'reverse'
+        ? `Reverse couldn't decode ${sound.name}. Try re-exporting that MP3.`
+        : `Could not play: ${sound.name}`);
       stopCurrent();
     }
   }
