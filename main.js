@@ -821,19 +821,73 @@
     renderNumpad();
   }
 
-  function askNumpadAssignment(sound) {
-    const answer = window.prompt(
-      `Assign "${sound.name}" to which numpad key? Enter 1–9:`,
-      ''
-    );
-    if (answer === null) return;
-    const key = answer.trim();
-    if (!/^[1-9]$/.test(key)) {
-      window.alert('Please enter a numpad number from 1 to 9.');
-      return;
-    }
-    bindSoundToNumpad(key, sound.name);
+  let assignmentMenu = null;
+  let assignmentTrigger = null;
+
+  function closeNumpadAssignment() {
+    if (!assignmentMenu) return;
+    assignmentMenu.remove();
+    assignmentMenu = null;
+    assignmentTrigger?.focus({ preventScroll: true });
+    assignmentTrigger = null;
   }
+
+  function askNumpadAssignment(sound, event) {
+    closeNumpadAssignment();
+    assignmentTrigger = event.currentTarget;
+
+    const menu = document.createElement('div');
+    menu.className = 'numpad-assignment-menu';
+    menu.setAttribute('role', 'dialog');
+    menu.setAttribute('aria-label', `Assign ${sound.name} to numpad`);
+
+    const heading = document.createElement('div');
+    heading.className = 'numpad-assignment-title';
+    heading.textContent = `Assign “${sound.name}” to…`;
+
+    const grid = document.createElement('div');
+    grid.className = 'numpad-assignment-grid';
+    for (const key of ['7', '8', '9', '4', '5', '6', '1', '2', '3']) {
+      const option = document.createElement('button');
+      option.type = 'button';
+      option.className = 'numpad-assignment-option';
+      const number = document.createElement('strong');
+      number.textContent = key;
+      const existing = document.createElement('small');
+      existing.textContent = numpadBindings[key] || 'Empty';
+      option.append(number, existing);
+      option.title = numpadBindings[key]
+        ? `Replace ${numpadBindings[key]} on Numpad ${key}`
+        : `Assign to empty Numpad ${key}`;
+      option.addEventListener('click', () => {
+        bindSoundToNumpad(key, sound.name);
+        closeNumpadAssignment();
+      });
+      grid.appendChild(option);
+    }
+    menu.append(heading, grid);
+    document.body.appendChild(menu);
+    assignmentMenu = menu;
+
+    const rect = menu.getBoundingClientRect();
+    const x = event.clientX || assignmentTrigger.getBoundingClientRect().left;
+    const y = event.clientY || assignmentTrigger.getBoundingClientRect().bottom;
+    menu.style.left = `${Math.max(8, Math.min(x, window.innerWidth - rect.width - 8))}px`;
+    menu.style.top = `${Math.max(8, Math.min(y, window.innerHeight - rect.height - 8))}px`;
+    grid.querySelector('button')?.focus({ preventScroll: true });
+  }
+
+  document.addEventListener('pointerdown', event => {
+    if (assignmentMenu && !assignmentMenu.contains(event.target)) {
+      closeNumpadAssignment();
+    }
+  });
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && assignmentMenu) {
+      event.preventDefault();
+      closeNumpadAssignment();
+    }
+  });
 
   function initNumpad() {
     readNumpadBindings();
@@ -1011,14 +1065,14 @@
       button.addEventListener(
         'click',
         event => {
-          if (event.shiftKey) askNumpadAssignment(sound);
+          if (event.shiftKey) askNumpadAssignment(sound, event);
           else play(sound);
         }
       );
 
       button.addEventListener('contextmenu', event => {
         event.preventDefault();
-        askNumpadAssignment(sound);
+        askNumpadAssignment(sound, event);
       });
 
       container.appendChild(button);
