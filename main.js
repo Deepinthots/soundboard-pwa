@@ -821,6 +821,20 @@
     renderNumpad();
   }
 
+  function askNumpadAssignment(sound) {
+    const answer = window.prompt(
+      `Assign "${sound.name}" to which numpad key? Enter 1–9:`,
+      ''
+    );
+    if (answer === null) return;
+    const key = answer.trim();
+    if (!/^[1-9]$/.test(key)) {
+      window.alert('Please enter a numpad number from 1 to 9.');
+      return;
+    }
+    bindSoundToNumpad(key, sound.name);
+  }
+
   function initNumpad() {
     readNumpadBindings();
 
@@ -973,6 +987,7 @@
 
       button.type = 'button';
       button.draggable = true;
+      button.title = 'Click to play · Right-click or Shift+click to assign to numpad';
       button.addEventListener('dragstart', event => {
         if (!event.dataTransfer) return;
         event.dataTransfer.effectAllowed = 'copy';
@@ -995,8 +1010,16 @@
 
       button.addEventListener(
         'click',
-        () => play(sound)
+        event => {
+          if (event.shiftKey) askNumpadAssignment(sound);
+          else play(sound);
+        }
       );
+
+      button.addEventListener('contextmenu', event => {
+        event.preventDefault();
+        askNumpadAssignment(sound);
+      });
 
       container.appendChild(button);
     }
