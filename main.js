@@ -896,6 +896,25 @@
   function initNumpad() {
     readNumpadBindings();
 
+    // Windows temporarily releases Shift in keyboard events when it
+    // overrides Num Lock. The following Numpad keydown can report
+    // shiftKey=false even while Shift is physically held down.
+    let shiftHeld = false;
+    let lastShiftRelease = -Infinity;
+    document.addEventListener('keydown', event => {
+      if (event.key === 'Shift') shiftHeld = true;
+    });
+    document.addEventListener('keyup', event => {
+      if (event.key === 'Shift') {
+        shiftHeld = false;
+        lastShiftRelease = event.timeStamp;
+      }
+    });
+    window.addEventListener('blur', () => {
+      shiftHeld = false;
+      lastShiftRelease = -Infinity;
+    });
+
     document.querySelectorAll('.numpad-slot').forEach(slot => {
       const key = slot.dataset.numpad;
 
@@ -985,7 +1004,11 @@
       const sound = getNumpadSound(key);
       if (!sound) return;
       event.preventDefault();
-      play(sound, { reverse: event.shiftKey });
+      const recentShiftRelease = event.timeStamp - lastShiftRelease >= 0 &&
+        event.timeStamp - lastShiftRelease < 200;
+      play(sound, {
+        reverse: event.shiftKey || shiftHeld || recentShiftRelease
+      });
     });
 
     renderNumpad();
