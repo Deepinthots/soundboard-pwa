@@ -32,6 +32,7 @@
   let activeEffect = null;
   let activeRouting = null;
   let activeSound = null;
+  let activeReverse = false;
   let echoLevel = 0;
   let voiceFilter = 'off';
   let loopEnabled = false; // Intentionally resets to Off on every visit.
@@ -470,12 +471,14 @@
   }
 
   function setVoiceFilter(value) {
-    if (!['off', 'wobble', 'reverse'].includes(value)) return;
+    if (!['off', 'wobble'].includes(value)) return;
     voiceFilter = value;
     if ($('voice-filter')) $('voice-filter').value = value;
     // Rebuild the routing at the next play; avoids unsafe graph rewiring.
     // Changing the dropdown during playback restarts that clip with the new filter.
-    if ((activeAudio || activePlayer) && activeSound) play(activeSound);
+    if ((activeAudio || activePlayer) && activeSound) {
+      play(activeSound, { reverse: activeReverse });
+    }
   }
 
   function setLoop(enabled) {
@@ -594,6 +597,7 @@
   function stopCurrent() {
     sequence++;
     activeSound = null;
+    activeReverse = false;
     setPlaybackLabel();
     for (const tail of [...pendingTails]) tail.dispose();
 
@@ -895,9 +899,9 @@
     document.querySelectorAll('.numpad-slot').forEach(slot => {
       const key = slot.dataset.numpad;
 
-      slot.addEventListener('click', () => {
+      slot.addEventListener('click', event => {
         const sound = getNumpadSound(key);
-        if (sound) play(sound);
+        if (sound) play(sound, { reverse: event.shiftKey });
       });
 
       slot.addEventListener('contextmenu', event => {
@@ -976,12 +980,12 @@
           target instanceof HTMLTextAreaElement ||
           target instanceof HTMLSelectElement ||
           target?.isContentEditable) return;
-      if (!/^Numpad[1-9]$/.test(event.code) || !/^[1-9]$/.test(event.key)) return;
+      if (!/^Numpad[1-9]$/.test(event.code)) return;
       const key = event.code.slice(-1);
       const sound = getNumpadSound(key);
       if (!sound) return;
       event.preventDefault();
-      play(sound);
+      play(sound, { reverse: event.shiftKey });
     });
 
     renderNumpad();
@@ -1041,7 +1045,7 @@
 
       button.type = 'button';
       button.draggable = true;
-      button.title = 'Click to play · Right-click or Shift+click to assign to numpad';
+      button.title = 'Click to play · Shift+click to reverse · Right-click to assign to numpad';
       button.addEventListener('dragstart', event => {
         if (!event.dataTransfer) return;
         event.dataTransfer.effectAllowed = 'copy';
@@ -1065,8 +1069,7 @@
       button.addEventListener(
         'click',
         event => {
-          if (event.shiftKey) askNumpadAssignment(sound, event);
-          else play(sound);
+          play(sound, { reverse: event.shiftKey });
         }
       );
 
@@ -1119,11 +1122,12 @@
     setTimeout(() => tail.dispose(), 6000);
   }
 
-  async function play(sound) {
+  async function play(sound, { reverse = false } = {}) {
     // Loop belongs to the currently playing clip only. Even if Loop
     // was checked, clicking a sound or using a numpad key turns it Off.
     setLoop(false);
     stopCurrent();
+    activeReverse = reverse;
     const thisSequence = sequence;
     let audio = null;
     let player = null;
@@ -1136,7 +1140,7 @@
       await Tone.start();
       if (thisSequence !== sequence) return;
 
-      const reversed = voiceFilter === 'reverse';
+      const reversed = reverse;
       const context = Tone.getContext().rawContext;
 
       if (reversed) {
@@ -1182,6 +1186,7 @@
         activeAudio = null;
         activePlayer = null;
         activeSound = null;
+        activeReverse = false;
         activeRouting = null;
         activeEffect = null;
         setPlaybackLabel();
@@ -1209,7 +1214,7 @@
         return;
       }
       console.error('Sound playback error:', sound.url, error);
-      showStatus(voiceFilter === 'reverse'
+      showStatus(reverse
         ? `Reverse couldn't decode ${sound.name}. Try re-exporting that MP3.`
         : `Could not play: ${sound.name}`);
       stopCurrent();
